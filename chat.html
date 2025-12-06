@@ -123,16 +123,38 @@
                 <button class="close-modal" id="btnCloseCreate">&times;</button>
             </div>
             <div class="modal-body custom-scrollbar">
-                <p class="modal-label">Room Icon</p>
+                <label class="modal-label">Room Icon</label>
+                
+                <!-- Custom Upload Area -->
+                <div class="room-upload-area" id="roomIconUpload">
+                    <div class="icon-preview" id="roomIconPreview">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                    </div>
+                    <div class="upload-text">
+                        <span>Upload Image</span>
+                        <small>or select a preset below</small>
+                    </div>
+                    <input type="file" id="roomIconInput" accept="image/*" hidden>
+                </div>
+
+                <!-- Presets Grid -->
                 <div class="avatar-grid small-grid" id="createRoomAvatarGrid"></div>
 
-                <label class="modal-label">Room Name</label>
-                <input type="text" class="modal-input" id="newRoomName" placeholder="e.g. The Hangout" maxlength="20">
-                
-                <label class="modal-label">Room Password</label>
-                <input type="password" class="modal-input" id="newRoomKey" placeholder="Required for others to join">
+                <div class="input-stack">
+                    <div>
+                        <label class="modal-label">Room Name</label>
+                        <input type="text" class="modal-input" id="newRoomName" placeholder="e.g. The Hangout" maxlength="20">
+                    </div>
+                    <div>
+                        <label class="modal-label">Room Password</label>
+                        <input type="password" class="modal-input" id="newRoomKey" placeholder="Required for others to join">
+                    </div>
+                </div>
 
-                <button class="modal-btn" id="btnConfirmCreate">Create & Join</button>
+                <div class="modal-actions">
+                    <button class="modal-btn" id="btnConfirmCreate">Create & Join</button>
+                    <button class="modal-btn-secondary" id="btnCancelCreate">Cancel</button>
+                </div>
             </div>
         </div>
     </div>

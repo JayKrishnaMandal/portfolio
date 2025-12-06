@@ -243,7 +243,12 @@ function renderDashboard() {
 async function createRoom() {
     const name = document.getElementById('newRoomName').value.trim();
     const key = document.getElementById('newRoomKey').value.trim();
-    const selectedIcon = document.querySelector('.small-grid .selected')?.src || `https://api.dicebear.com/7.x/shapes/svg?seed=${Date.now()}`;
+    
+    // Determine Icon: Check if custom upload exists (img tag inside preview)
+    const customImg = document.querySelector('#roomIconPreview img')?.src;
+    const presetImg = document.querySelector('.small-grid .selected')?.src;
+    
+    const finalIcon = customImg || presetImg || `https://api.dicebear.com/7.x/shapes/svg?seed=${Date.now()}`;
 
     if (!name || !key) return alert('Please fill all fields');
     if (!currentUser) return;
@@ -260,7 +265,7 @@ async function createRoom() {
                 privateKey: key, 
                 adminUid: currentUser.uid,
                 adminName: currentUser.username,
-                icon: selectedIcon,
+                icon: finalIcon,
                 createdAt: Date.now()
             },
             members: {}
@@ -558,11 +563,24 @@ function setupEventListeners() {
 
     // Dashboard
     document.getElementById('btnDashLogout').onclick = logout;
-    document.getElementById('btnOpenCreateRoom').onclick = () => {
+    
+    // Create Room Logic
+    const btnOpenCreate = document.getElementById('btnOpenCreateRoom');
+    const roomIconPreview = document.getElementById('roomIconPreview');
+    const roomIconInput = document.getElementById('roomIconInput');
+    const createGrid = document.getElementById('createRoomAvatarGrid');
+
+    btnOpenCreate.onclick = () => {
         el.createModal.style.display = 'flex';
-        // Init avatars for room creation
-        const grid = document.getElementById('createRoomAvatarGrid');
-        grid.innerHTML = '';
+        
+        // Reset Inputs
+        document.getElementById('newRoomName').value = '';
+        document.getElementById('newRoomKey').value = '';
+        roomIconInput.value = ''; // Clear file
+        roomIconPreview.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i>';
+        
+        // Init presets
+        createGrid.innerHTML = '';
         for (let i = 0; i < 8; i++) {
             const seed = `room${i}`;
             const img = document.createElement('img');
@@ -571,12 +589,39 @@ function setupEventListeners() {
             img.onclick = () => {
                 document.querySelectorAll('.avatar-option').forEach(a => a.classList.remove('selected'));
                 img.classList.add('selected');
+                // Clear custom upload preview if preset selected
+                roomIconInput.value = '';
+                roomIconPreview.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i>';
             };
-            grid.appendChild(img);
+            grid_select_default(img, i); // Helper to select first if needed, but here we prefer no default if custom? 
+            // Actually let's select first by default but allow override
+            if (i === 0) img.classList.add('selected');
+            createGrid.appendChild(img);
         }
     };
+    
+    // Helper to select default
+    function grid_select_default(img, i) {
+        if(i===0) img.classList.add('selected');
+    }
+
+    // Custom Upload Click
+    document.getElementById('roomIconUpload').onclick = () => roomIconInput.click();
+    
+    // Handle File Change
+    roomIconInput.onchange = async (e) => {
+        if (e.target.files[0]) {
+            // Deselect presets
+            document.querySelectorAll('#createRoomAvatarGrid .avatar-option').forEach(a => a.classList.remove('selected'));
+            
+            const base64 = await compressImage(e.target.files[0]);
+            roomIconPreview.innerHTML = `<img src="${base64}">`;
+        }
+    };
+
     document.getElementById('btnConfirmCreate').onclick = createRoom;
     document.getElementById('btnCloseCreate').onclick = () => el.createModal.style.display = 'none';
+    document.getElementById('btnCancelCreate').onclick = () => el.createModal.style.display = 'none';
     document.getElementById('btnDashJoin').onclick = joinRoomFromDash;
 
     // Chat
