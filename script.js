@@ -198,6 +198,21 @@ function saveSession(user, persistent) {
     }
 }
 
+// Leave current room and return to dashboard
+function leaveRoom() {
+    if(currentUser && currentRoomId) {
+        // Remove presence
+        remove(ref(db, `rooms/${currentRoomId}/members/${currentUser.uid}`));
+    }
+    // Clear room state but keep user logged in
+    currentRoomId = null;
+    currentRoomName = null;
+    currentRoomKey = null;
+    showScreen('dashboard');
+    renderDashboard();
+}
+
+// Full logout - clears user session
 function logout() {
     if(currentUser && currentRoomId) {
         // Remove presence
@@ -878,8 +893,8 @@ function setupEventListeners() {
         btnChatLogout.onclick = (e) => {
             e.preventDefault();
             e.stopPropagation();
-            console.log('[LOGOUT] Chat logout CLICKED!');
-            logout();
+            console.log('[LEAVE ROOM] Leave room button clicked!');
+            leaveRoom(); // Changed from logout() to leaveRoom()
         };
     } else {
         console.error('[LOGOUT] btnLogout NOT FOUND');
@@ -926,28 +941,49 @@ function setupEventListeners() {
     
     // Delete Room Button
     const btnDeleteRoom = document.getElementById('btnDeleteRoom');
+    console.log('[DELETE ROOM] Button element:', btnDeleteRoom);
+    
     if (btnDeleteRoom) {
-        btnDeleteRoom.onclick = async () => {
+        console.log('[DELETE ROOM] Attaching click handler');
+        btnDeleteRoom.onclick = async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('[DELETE ROOM] Button clicked!');
+            console.log('[DELETE ROOM] Current room ID:', currentRoomId);
+            console.log('[DELETE ROOM] Current user:', currentUser);
+            
             if (!currentRoomId || !currentUser) {
                 alert('No room loaded');
+                console.error('[DELETE ROOM] Missing room or user');
                 return;
             }
-            
-            // Check if user is admin
-            const roomRef = ref(db, `rooms/${currentRoomId}/meta/adminUid`);
-            const adminSnap = await get(roomRef);
-            
-            if (adminSnap.val() !== currentUser.uid) {
-                alert('Only the room creator can delete the room!');
-                return;
-            }
-            
-            const confirmation = confirm(`Are you sure you want to DELETE this room? This cannot be undone!`);
-            if (!confirmation) return;
             
             try {
+                // Check if user is admin
+                console.log('[DELETE ROOM] Checking admin status...');
+                const adminRef = ref(db, `rooms/${currentRoomId}/meta/adminUid`);
+                const adminSnap = await get(adminRef);
+                const adminUid = adminSnap.val();
+                
+                console.log('[DELETE ROOM] Room admin UID:', adminUid);
+                console.log('[DELETE ROOM] Current user UID:', currentUser.uid);
+                
+                if (adminUid !== currentUser.uid) {
+                    alert('Only the room creator can delete the room!');
+                    console.warn('[DELETE ROOM] User is not admin');
+                    return;
+                }
+                
+                const confirmation = confirm(`Are you sure you want to DELETE this room? This cannot be undone!`);
+                if (!confirmation) {
+                    console.log('[DELETE ROOM] User cancelled deletion');
+                    return;
+                }
+                
+                console.log('[DELETE ROOM] Deleting room...');
                 // Remove room data
                 await remove(ref(db, `rooms/${currentRoomId}`));
+                console.log('[DELETE ROOM] Room data removed from Firebase');
                 
                 // Remove from user's joined rooms
                 if (currentUser.joinedRooms && currentUser.joinedRooms[currentRoomId]) {
@@ -956,6 +992,7 @@ function setupEventListeners() {
                         joinedRooms: currentUser.joinedRooms
                     });
                     saveSession(currentUser, currentUser.autoLogout === true);
+                    console.log('[DELETE ROOM] Removed from user joined rooms');
                 }
                 
                 alert('Room deleted successfully!');
@@ -963,11 +1000,15 @@ function setupEventListeners() {
                 el.roomSettingsModal.classList.remove('flex');
                 showScreen('dashboard');
                 renderDashboard();
+                console.log('[DELETE ROOM] Delete complete, returned to dashboard');
             } catch (error) {
-                console.error('Delete room error:', error);
+                console.error('[DELETE ROOM] Error:', error);
                 alert('Failed to delete room: ' + error.message);
             }
         };
+        console.log('[DELETE ROOM] Click handler attached successfully');
+    } else {
+        console.error('[DELETE ROOM] btnDeleteRoom NOT FOUND in DOM');
     }
     // Note: Delete room button event listener is now attached in openRoomSettings() when modal opens
 
