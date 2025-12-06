@@ -63,16 +63,22 @@ function init() {
 }
 
 function showScreen(screen) {
-    if(el.authScreen) el.authScreen.style.display = 'none';
-    if(el.dashboardScreen) el.dashboardScreen.style.display = 'none';
-    if(el.app) el.app.classList.remove('visible');
+    // Hide all screens using Tailwind's 'hidden' class
+    if(el.authScreen) el.authScreen.classList.add('hidden');
+    if(el.dashboardScreen) el.dashboardScreen.classList.add('hidden');
+    if(el.app) el.app.classList.add('hidden');
     
-    if (screen === 'auth' && el.authScreen) el.authScreen.style.display = 'flex';
+    // Show the requested screen
+    if (screen === 'auth' && el.authScreen) {
+        el.authScreen.classList.remove('hidden');
+    }
     if (screen === 'dashboard' && el.dashboardScreen) {
-        el.dashboardScreen.style.display = 'flex';
+        el.dashboardScreen.classList.remove('hidden');
         renderDashboard();
     }
-    if (screen === 'chat' && el.app) el.app.classList.add('visible');
+    if (screen === 'chat' && el.app) {
+        el.app.classList.remove('hidden');
+    }
 }
 
 // --- AUTHENTICATION ---
