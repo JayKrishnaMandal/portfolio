@@ -52,60 +52,73 @@
     </div>
 
     <!-- 1. AUTH CONTAINER -->
-    <div id="authScreen" class="flex h-full w-full items-center justify-center p-4">
-        <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-gray-100 p-8 flex flex-col gap-6">
+    <div id="authScreen" class="flex h-full w-full items-center justify-center p-4 sm:p-6 bg-gradient-to-br from-blue-50 to-white">
+        <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
             
-            <!-- Header -->
-            <div class="text-center">
-                <h1 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-400 mb-2">JKChat</h1>
-                <p class="text-text-sub text-sm">Enterprise Team Communication</p>
+            <!-- Header Section -->
+            <div class="text-center px-8 pt-10 pb-6 bg-gradient-to-b from-blue-50/50 to-white">
+                <h1 class="text-5xl font-extrabold mb-3">
+                    <span class="bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent">JKChat</span>
+                </h1>
+                <p class="text-text-sub text-base font-medium">Enterprise Team Communication</p>
             </div>
 
-            <!-- Tabs -->
-            <div class="flex bg-gray-100 p-1 rounded-xl">
-                <button id="tabLogin" class="flex-1 py-2.5 text-sm font-semibold text-text-sub rounded-lg transition-all active bg-white text-text-main shadow-sm">Log In</button>
-                <button id="tabRegister" class="flex-1 py-2.5 text-sm font-semibold text-text-sub rounded-lg transition-all hover:text-text-main">Sign Up</button>
-            </div>
+            <!-- Content Section -->
+            <div class="px-8 pb-10">
+                <!-- Tabs -->
+                <div class="flex bg-gray-100 p-1.5 rounded-xl mb-8">
+                    <button id="tabLogin" class="flex-1 py-3 text-sm font-bold rounded-lg transition-all bg-white text-text-main shadow-sm">
+                        Log In
+                    </button>
+                    <button id="tabRegister" class="flex-1 py-3 text-sm font-bold text-text-sub rounded-lg transition-all hover:text-text-main">
+                        Sign Up
+                    </button>
+                </div>
 
-            <!-- Login Form -->
-            <div id="formLogin" class="flex flex-col gap-4">
-                <div class="relative">
-                    <i class="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-text-sub text-sm"></i>
-                    <input type="text" id="loginUsername" placeholder="Username" class="w-full pl-10 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary focus:ring-4 focus:ring-blue-500/10 transition-all">
-                </div>
-                <div class="relative">
-                    <i class="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-text-sub text-sm"></i>
-                    <input type="password" id="loginPassword" placeholder="Password" class="w-full pl-10 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary focus:ring-4 focus:ring-blue-500/10 transition-all">
-                </div>
-                <div class="flex items-center gap-2">
-                    <input type="checkbox" id="chkAutoLogout" class="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary">
-                    <label for="chkAutoLogout" class="text-xs text-text-sub cursor-pointer">Auto-logout on exit</label>
-                </div>
-                <button id="btnSubmitLogin" class="w-full bg-primary hover:bg-primary-dark text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-500/30 transition-all active:scale-[0.98]">Log In</button>
-                <div id="loginFeedback" class="text-center text-red-500 text-xs font-semibold h-4"></div>
-            </div>
-
-            <!-- Register Form -->
-            <div id="formRegister" class="hidden flex flex-col gap-4">
-                <!-- Avatar Upload -->
-                <div class="flex flex-col items-center gap-2 mb-2">
-                    <div id="regAvatarPreview" class="w-24 h-24 rounded-full bg-gray-50 border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-primary hover:bg-blue-50 transition-all overflow-hidden relative group">
-                        <i class="fa-solid fa-camera text-2xl text-gray-400 group-hover:text-primary transition-colors"></i>
+                <!-- Login Form -->
+                <div id="formLogin" class="flex flex-col gap-5">
+                    <div class="relative">
+                        <i class="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-text-sub text-base"></i>
+                        <input type="text" id="loginUsername" placeholder="Username" class="w-full pl-11 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-xl text-base focus:outline-none focus:border-primary focus:ring-4 focus:ring-blue-500/10 transition-all font-medium">
                     </div>
-                    <input type="file" id="regAvatarInput" accept="image/*" class="hidden">
-                    <p class="text-xs text-text-sub">Tap to upload photo</p>
+                    <div class="relative">
+                        <i class="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-text-sub text-base"></i>
+                        <input type="password" id="loginPassword" placeholder="Password" class="w-full pl-11 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-xl text-base focus:outline-none focus:border-primary focus:ring-4 focus:ring-blue-500/10 transition-all font-medium">
+                    </div>
+                    <div class="flex items-center gap-2.5 px-1">
+                        <input type="checkbox" id="chkAutoLogout" class="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary cursor-pointer">
+                        <label for="chkAutoLogout" class="text-sm text-text-sub cursor-pointer select-none">Auto-logout on exit</label>
+                    </div>
+                    <button id="btnSubmitLogin" class="w-full bg-gradient-to-r from-primary to-blue-500 hover:from-primary-dark hover:to-blue-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-500/30 transition-all active:scale-[0.98] text-base">
+                        Log In
+                    </button>
+                    <div id="loginFeedback" class="text-center text-red-500 text-sm font-semibold min-h-[20px]"></div>
                 </div>
 
-                <div class="relative">
-                    <i class="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-text-sub text-sm"></i>
-                    <input type="text" id="regUsername" placeholder="Choose Username" maxlength="15" class="w-full pl-10 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary focus:ring-4 focus:ring-blue-500/10 transition-all">
+                <!-- Register Form -->
+                <div id="formRegister" class="hidden flex-col gap-5">
+                    <!-- Avatar Upload -->
+                    <div class="flex flex-col items-center gap-3 py-2">
+                        <div id="regAvatarPreview" class="w-28 h-28 rounded-full bg-gradient-to-br from-blue-50 to-blue-100 border-3 border-dashed border-blue-300 flex items-center justify-center cursor-pointer hover:border-primary hover:scale-105 transition-all overflow-hidden relative group shadow-md">
+                            <i class="fa-solid fa-camera text-3xl text-blue-400 group-hover:text-primary transition-colors"></i>
+                        </div>
+                        <input type="file" id="regAvatarInput" accept="image/*" class="hidden">
+                        <p class="text-sm text-text-sub font-medium">Tap to upload photo</p>
+                    </div>
+
+                    <div class="relative">
+                        <i class="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-text-sub text-base"></i>
+                        <input type="text" id="regUsername" placeholder="Choose Username" maxlength="15" class="w-full pl-11 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-xl text-base focus:outline-none focus:border-primary focus:ring-4 focus:ring-blue-500/10 transition-all font-medium">
+                    </div>
+                    <div class="relative">
+                        <i class="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-text-sub text-base"></i>
+                        <input type="password" id="regPassword" placeholder="Choose Password (6+ chars)" class="w-full pl-11 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-xl text-base focus:outline-none focus:border-primary focus:ring-4 focus:ring-blue-500/10 transition-all font-medium">
+                    </div>
+                    <button id="btnSubmitRegister" class="w-full bg-gradient-to-r from-primary to-blue-500 hover:from-primary-dark hover:to-blue-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-500/30 transition-all active:scale-[0.98] text-base">
+                        Create Account
+                    </button>
+                    <div id="regFeedback" class="text-center text-red-500 text-sm font-semibold min-h-[20px]"></div>
                 </div>
-                <div class="relative">
-                    <i class="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-text-sub text-sm"></i>
-                    <input type="password" id="regPassword" placeholder="Choose Password (6+ chars)" class="w-full pl-10 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary focus:ring-4 focus:ring-blue-500/10 transition-all">
-                </div>
-                <button id="btnSubmitRegister" class="w-full bg-primary hover:bg-primary-dark text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-500/30 transition-all active:scale-[0.98]">Create Account</button>
-                <div id="regFeedback" class="text-center text-red-500 text-xs font-semibold h-4"></div>
             </div>
         </div>
     </div>

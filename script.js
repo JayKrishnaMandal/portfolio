@@ -730,14 +730,28 @@ function setupEventListeners() {
     // Auth Tabs
     if(el.tabLogin) {
         el.tabLogin.onclick = () => {
-            el.tabLogin.classList.add('active'); el.tabRegister.classList.remove('active');
-            el.formLogin.style.display = 'block'; el.formRegister.style.display = 'none';
+            // Style the active tab
+            el.tabLogin.classList.add('bg-white', 'text-text-main', 'shadow-sm');
+            el.tabLogin.classList.remove('text-text-sub');
+            el.tabRegister.classList.remove('bg-white', 'text-text-main', 'shadow-sm');
+            el.tabRegister.classList.add('text-text-sub');
+            
+            // Show/hide forms
+            el.formLogin.classList.remove('hidden');
+            el.formRegister.classList.add('hidden');
         };
     }
     if(el.tabRegister) {
         el.tabRegister.onclick = () => {
-            el.tabRegister.classList.add('active'); el.tabLogin.classList.remove('active');
-            el.formRegister.style.display = 'block'; el.formLogin.style.display = 'none';
+            // Style the active tab
+            el.tabRegister.classList.add('bg-white', 'text-text-main', 'shadow-sm');
+            el.tabRegister.classList.remove('text-text-sub');
+            el.tabLogin.classList.remove('bg-white', 'text-text-main', 'shadow-sm');
+            el.tabLogin.classList.add('text-text-sub');
+            
+            // Show/hide forms
+            el.formRegister.classList.remove('hidden');
+            el.formLogin.classList.add('hidden');
         };
     }
 
