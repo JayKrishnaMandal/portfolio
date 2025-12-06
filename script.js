@@ -599,6 +599,63 @@ function setupRoomListeners(roomId) {
     const msgRef = child(ref(db), `rooms/${roomId}/messages`);
     el.messages.innerHTML = '';
     
+    // Check if banned
+    onValue(ref(db, `rooms/${roomId}/banned/${currentUser.uid}`), (s) => {
+        if(s.exists()) {
+            alert("You have been kicked from this room.");
+            leaveRoom(); // Use leaveRoom instead of logout
+            currentRoomId = null;
+        }
+    });
+
+    onChildAdded(msgRef, (snap) => {
+        renderMessage(snap.val());
+        el.messages.scrollTop = el.messages.scrollHeight;
+    });
+
+    // 2. Members
+    const memRef = child(ref(db), `rooms/${roomId}/members`);
+    onValue(memRef, (snap) => {
+        renderMemberList(snap.val());
+    });
+    
+    // 3. CRITICAL: Re-attach Leave Room button handler
+    console.log('[SETUP] Attaching leaveRoom to btnLogout');
+    const leaveButton = document.getElementById('btnLogout');
+    if (leaveButton) {
+        // Clone button to remove all existing listeners
+        const newLeaveButton = leaveButton.cloneNode(true);
+        leaveButton.parentNode.replaceChild(newLeaveButton, leaveButton);
+        
+        newLeaveButton.onclick = () => {
+            console.log('[LEAVE ROOM] Button clicked from setupRoomListeners');
+            leaveRoom();
+        };
+        console.log('[SETUP] leaveRoom attached successfully');
+    } else {
+        console.error('[SETUP] btnLogout not found');
+    }
+}
+
+function renderMemberList(members) {
+    el.memberList.innerHTML = '';
+    if (!members) return;
+
+    const myUid = currentUser.uid;
+    const adminUid = currentRoomAdminUid;
+
+    Object.entries(members).forEach(([uid, m]) => {
+        const div = document.createElement('div');
+        div.className = 'member-item';
+        
+        let actionBtn = '';
+        if(myUid === adminUid && uid !== myUid) {
+            actionBtn = `<i class="fa-solid fa-ban" style="color:#ff4444; margin-left:auto; padding:8px; cursor:pointer;" title="Kick User" onclick="kickMember('${uid}', '${escapeHtml(m.username)}')"></i>`;
+        }
+
+        const isRoomAdmin = (uid === adminUid);
+
+        div.innerHTML = `
             <div class="member-avatar-wrapper">
                 <img src="${m.avatar}" class="member-avatar">
                 <div class="status-dot ${m.status}"></div>
