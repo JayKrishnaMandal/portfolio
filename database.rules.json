@@ -1,0 +1,24 @@
+{
+  "rules": {
+    ".read": true,
+    "rooms": {
+      "$roomId": {
+        // Only allow creating a room if it doesn't exist
+        ".write": "!data.exists() || !newData.exists()", 
+        "messages": {
+           "$msgId": {
+             // Validate message structure
+             ".write": "newData.exists() && newData.hasChildren(['user', 'text', 'time'])",
+             ".validate": "newData.child('text').isString() && newData.child('text').val().length < 1000"
+           }
+        },
+        "members": {
+           "$uid": {
+             ".write": true,
+             ".validate": "newData.hasChildren(['name', 'status'])"
+           }
+        }
+      }
+    }
+  }
+}

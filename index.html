@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#18191a" media="(prefers-color-scheme: dark)">
+    <title>JKChat</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="error-toast" id="errorToast">Error Message</div>
+    
+    <!-- LOADING OVERLAY -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <div class="loading-text">Connecting...</div>
+    </div>
+
+    <!-- 1. LOGIN WRAPPER -->
+    <div class="login-wrapper" id="loginScreen">
+        <div class="login-content">
+            <div class="brand-section">
+                <h1>JKChat</h1>
+                <p>Connect with anything,<br>anytime, anywhere.</p>
+            </div>
+
+            <div class="card-container">
+                <div class="login-card">
+                    <div class="avatar-selection">
+                        <p>Choose Your Character</p>
+                        <div class="avatar-grid" id="loginAvatarGrid">
+                            <!-- Injected by JS -->
+                        </div>
+                    </div>
+
+                    <input type="text" class="login-input" id="joinUser" placeholder="Your Name" autocomplete="off" maxlength="20">
+                    <input type="text" class="login-input" id="joinRoom" placeholder="Room Name" autocomplete="off" maxlength="20">
+                    <input type="password" class="login-input" id="joinKey" placeholder="Private Key (Password)">
+                    
+                    <button class="btn-login" id="btnLogin">Log In</button>
+                    <div class="divider"></div>
+                    <button class="btn-create" id="btnOpenCreate">Create New Room</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CREATE MODAL -->
+    <div class="modal-overlay" id="createModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div><h2>Sign Up</h2><p style="font-size:12px; color:var(--text-sub); margin:0;">Create a secure space.</p></div>
+                <button class="close-modal" id="btnCloseModal">&times;</button>
+            </div>
+            <div class="modal-body custom-scrollbar">
+                
+                <h3 class="input-group-label">1. Room Details</h3>
+                <p class="modal-label">Choose Room Icon</p>
+                <div class="avatar-grid small-grid" id="createRoomAvatarGrid"></div>
+
+                <label class="modal-label">New Room Name</label>
+                <input type="text" class="modal-input" id="createRoom" placeholder="Unique Room Name" maxlength="20">
+                
+                <label class="modal-label">Set Private Key</label>
+                <input type="password" class="modal-input" id="createKey" placeholder="Room Password">
+
+                <div class="divider"></div>
+
+                <h3 class="input-group-label">2. Admin Details</h3>
+                <p class="modal-label">Choose Your Avatar</p>
+                <div class="avatar-grid small-grid" id="createUserAvatarGrid"></div>
+
+                <label class="modal-label">User Name (Admin)</label>
+                <input type="text" class="modal-input" id="createUser" placeholder="Your name" maxlength="20">
+                
+                <div style="text-align: center; margin-top:20px;">
+                    <button class="modal-btn" id="btnSignUp">Create Room</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. MESSENGER APP UI -->
+    <div class="app-container" id="app">
+        
+        <!-- Sidebar Overlay (Mobile) -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <img id="sidebarRoomIcon" class="room-icon-small" src=""> 
+                    <span id="sidebarRoomNameDisplay">Room</span>
+                </div>
+                <button id="btnDarkMode" aria-label="Toggle Dark Mode"><i class="fa-solid fa-moon"></i></button>
+            </div>
+            <div class="contact-list" id="memberList">
+                <!-- Members injected here -->
+            </div>
+            <div class="sidebar-footer">
+                <button id="btnLogout"> <i class="fa-solid fa-right-from-bracket"></i> Log Out</button>
+            </div>
+        </aside>
+
+        <!-- Chat Area -->
+        <main class="chat-area">
+            <header class="chat-header">
+                <div class="header-left">
+                    <i class="fa-solid fa-bars mobile-menu-btn" id="btnMobileMenu" aria-label="Menu"></i>
+                    <img id="headerRoomIcon" class="room-icon-small" src="" style="display:none;">
+                    <div class="room-info">
+                        <div class="room-name" id="headerRoomName">Room Name</div>
+                        <div class="typing-indicator" id="typingIndicator"></div>
+                    </div>
+                </div>
+                <!-- Right side -->
+            </header>
+
+            <div class="messages-container" id="messages"></div>
+
+            <div class="chat-input-area">
+                <div class="chat-input-wrapper">
+                    <div class="emoji-btn-wrapper">
+                        <i class="fa-regular fa-face-smile" id="btnEmoji"></i>
+                        <div id="emojiPickerContainer"></div>
+                    </div>
+                    <input type="text" class="chat-input" id="msgInput" placeholder="Message..." autocomplete="off" maxlength="1000">
+                </div>
+                <button class="send-btn" id="btnSend"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/picmo@latest/dist/umd/index.js"></script>
+    <script type="module" src="firebase-config.js"></script>
+    <script type="module" src="script.js"></script>
+</body>
+</html>
