@@ -11,10 +11,10 @@
     <!-- Remix Icons -->
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 
-    <!-- Fonts: Syne (Headings) & Manrope (Body) -->
+    <!-- Fonts: Syne (Artistic) & Manrope (Tech/Clean) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Configuration -->
     <script>
@@ -27,14 +27,15 @@
                         display: ['Syne', 'sans-serif'],
                     },
                     colors: {
-                        accent: '#CCFF00', // Acid Lime
-                        dark: '#080808',
-                        card: '#121212',
-                        cardHover: '#1A1A1A',
-                        light: '#F4F4F5'
+                        acid: '#D4FF00', // Signature Color
+                        dark: '#050505',
+                        panel: '#111111',
+                        light: '#F2F2F2',
+                        borderDark: 'rgba(255,255,255,0.1)',
+                        borderLight: 'rgba(0,0,0,0.1)',
                     },
                     backgroundImage: {
-                        'grid-pattern': "linear-gradient(to right, #222 1px, transparent 1px), linear-gradient(to bottom, #222 1px, transparent 1px);",
+                        'noise': "url('https://grainy-gradients.vercel.app/noise.svg')",
                     }
                 }
             }
@@ -42,407 +43,473 @@
     </script>
 
     <style>
-        /* Modern Reset & Utilities */
+        /* CORE RESET & SMOOTH SCROLL */
+        html.lenis { height: auto; }
+        .lenis.lenis-smooth { scroll-behavior: auto !important; }
+        .lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+        .lenis.lenis-stopped { overflow: hidden; }
+
         body {
+            background-color: #F2F2F2;
+            color: #050505;
             overflow-x: hidden;
-            transition: background-color 0.4s ease, color 0.4s ease;
+            cursor: default;
+        }
+        .dark body {
+            background-color: #050505;
+            color: #FFFFFF;
         }
 
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #CCFF00; border-radius: 4px; border: 2px solid #080808; }
-
-        /* Typography Fixes */
-        .text-clamp { font-size: clamp(3rem, 10vw, 8rem); line-height: 0.9; }
-        .text-outline {
-            -webkit-text-stroke: 1px rgba(128, 128, 128, 0.5);
-            color: transparent;
-            transition: all 0.3s ease;
-        }
-        .text-outline:hover { color: #CCFF00; -webkit-text-stroke: 0px; }
-
-        /* Grid Background */
-        .bg-grid {
-            background-size: 40px 40px;
-            mask-image: linear-gradient(to bottom, transparent, 5%, black, 95%, transparent);
-            -webkit-mask-image: linear-gradient(to bottom, transparent, 5%, black, 95%, transparent);
-            opacity: 0.2;
-            pointer-events: none;
+        /* LIQUID THEME TRANSITION OVERLAY */
+        .theme-overlay {
             position: fixed;
-            inset: 0;
-            z-index: 0;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background-color: #050505;
+            z-index: 9999;
+            pointer-events: none;
+            clip-path: circle(0% at 50% 50%);
         }
 
-        /* Card Hover Effects */
-        .bento-card {
-            transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), border-color 0.3s ease;
+        /* CUSTOM UTILS */
+        .text-outline { -webkit-text-stroke: 1px #050505; color: transparent; }
+        .dark .text-outline { -webkit-text-stroke: 1px #D4FF00; }
+        
+        .glass {
+            background: rgba(255,255,255,0.5);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0,0,0,0.05);
         }
-        .bento-card:hover {
-            transform: translateY(-5px);
-            border-color: #CCFF00;
+        .dark .glass {
+            background: rgba(17,17,17,0.6);
+            border: 1px solid rgba(255,255,255,0.05);
         }
 
-        /* Chat Animations */
-        @keyframes popIn {
-            0% { opacity: 0; transform: scale(0.8) translateY(20px); }
-            100% { opacity: 1; transform: scale(1) translateY(0); }
+        /* ANIMATIONS */
+        .reveal-char { display: inline-block; opacity: 0; transform: translateY(100%); }
+        
+        /* CHAT MESSAGE POP */
+        @keyframes msgPop {
+            0% { opacity: 0; transform: translateY(10px) scale(0.95); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
         }
-        .msg-anim { animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .msg-enter { animation: msgPop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+        /* SCROLLBAR */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #D4FF00; }
     </style>
 </head>
-<body class="bg-light text-dark dark:bg-dark dark:text-white antialiased selection:bg-accent selection:text-black">
+<body class="antialiased selection:bg-acid selection:text-black">
 
-    <!-- Grid Background Layer -->
-    <div class="bg-grid bg-grid-pattern"></div>
+    <!-- TRANSITION LAYER -->
+    <div class="theme-overlay"></div>
 
-    <!-- Navigation -->
-    <nav class="fixed top-0 left-0 w-full z-50 px-4 py-4 md:px-8 bg-light/80 dark:bg-dark/80 backdrop-blur-md border-b border-gray-200 dark:border-white/5 transition-all duration-300">
-        <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <a href="#" class="font-display font-bold text-2xl tracking-tighter hover:text-accent transition-colors">
-                JK<span class="text-accent">M.</span>
+    <!-- NOISE TEXTURE -->
+    <div class="fixed inset-0 z-0 opacity-[0.04] pointer-events-none bg-noise"></div>
+
+    <!-- NAVIGATION -->
+    <nav class="fixed top-0 w-full z-50 px-4 py-4 md:py-6 transition-all duration-300" id="navbar">
+        <div class="max-w-7xl mx-auto flex justify-between items-center glass rounded-full px-4 md:px-8 py-3">
+            
+            <!-- Logo -->
+            <a href="#" class="font-display font-bold text-xl tracking-tighter hover:text-acid transition-colors">
+                JKM<span class="text-acid text-3xl leading-none">.</span>
             </a>
 
-            <!-- Desktop Links -->
-            <div class="hidden md:flex gap-8 text-sm font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">
-                <a href="#services" class="hover:text-black dark:hover:text-white transition-colors">Services</a>
-                <a href="#projects" class="hover:text-black dark:hover:text-white transition-colors">Work</a>
-                <a href="#about" class="hover:text-black dark:hover:text-white transition-colors">About</a>
+            <!-- Desktop Menu -->
+            <div class="hidden md:flex gap-8 text-xs font-bold uppercase tracking-[0.2em] opacity-70">
+                <a href="#about" class="hover:text-acid hover:opacity-100 transition">About</a>
+                <a href="#services" class="hover:text-acid hover:opacity-100 transition">Services</a>
+                <a href="#work" class="hover:text-acid hover:opacity-100 transition">Work</a>
+                <a href="#contact" class="hover:text-acid hover:opacity-100 transition">Contact</a>
             </div>
 
-            <!-- Action Area -->
+            <!-- Actions -->
             <div class="flex items-center gap-3">
-                <button id="theme-toggle" class="w-10 h-10 rounded-full border border-gray-300 dark:border-white/10 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-white/10 transition">
+                <button id="theme-btn" class="w-10 h-10 rounded-full border border-gray-300 dark:border-white/10 flex items-center justify-center hover:bg-acid hover:text-black hover:border-acid transition">
                     <i class="ri-moon-line dark:hidden"></i>
                     <i class="ri-sun-line hidden dark:block"></i>
                 </button>
-                
-                <!-- CTA BUTTON WITH TEXT -->
-                <a href="/chat" class="flex items-center gap-2 bg-accent text-black px-5 py-2.5 rounded-full font-bold text-sm uppercase tracking-wide hover:scale-105 transition-transform shadow-[0_0_15px_rgba(204,255,0,0.4)]">
-                    <span>Try Chat App</span>
-                    <i class="ri-arrow-right-up-line"></i>
+
+                <!-- Responsive Try Chat Button -->
+                <a href="#chat-demo" class="bg-acid text-black rounded-full font-bold transition-transform hover:scale-105 flex items-center justify-center
+                   w-10 h-10 md:w-auto md:h-auto md:px-5 md:py-2.5">
+                    <i class="ri-chat-smile-3-fill text-lg md:hidden"></i>
+                    <span class="hidden md:flex items-center gap-2 text-xs uppercase tracking-wide">Try App <i class="ri-arrow-right-up-line"></i></span>
                 </a>
+
+                <!-- Mobile Menu Toggle -->
+                <button id="menu-btn" class="md:hidden text-2xl ml-1"><i class="ri-menu-4-line"></i></button>
             </div>
         </div>
     </nav>
 
-    <!-- Hero Section (Bento Grid Style) -->
-    <header class="relative pt-32 pb-20 px-4 md:px-8 z-10">
-        <div class="max-w-7xl mx-auto">
+    <!-- MOBILE MENU OVERLAY -->
+    <div id="mobile-menu" class="fixed inset-0 bg-dark z-40 translate-x-full transition-transform duration-500 flex flex-col justify-center items-center gap-8 text-white">
+        <a href="#about" class="text-3xl font-display font-bold mobile-link">ABOUT</a>
+        <a href="#services" class="text-3xl font-display font-bold mobile-link">SERVICES</a>
+        <a href="#work" class="text-3xl font-display font-bold mobile-link">WORK</a>
+        <a href="#contact" class="text-3xl font-display font-bold mobile-link">CONTACT</a>
+        <button id="close-menu" class="absolute top-6 right-6 text-4xl"><i class="ri-close-line"></i></button>
+    </div>
+
+    <!-- HERO SECTION -->
+    <header class="relative min-h-screen flex items-center pt-24 pb-12 px-4 md:px-8 z-10">
+        <div class="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
             
-            <!-- Top Section: Name & Image -->
-            <div class="flex flex-col lg:flex-row gap-8 mb-12">
-                <div class="lg:w-2/3">
-                    <div class="inline-block px-3 py-1 mb-4 border border-accent/50 text-accent rounded-full text-xs font-bold uppercase tracking-widest animate-pulse">
-                        ● Open to Work
-                    </div>
-                    <h1 class="font-display font-black text-clamp tracking-tighter leading-none mb-6">
-                        JAY KRISHNA <br>
-                        <span class="text-outline">MANDAL</span>
-                    </h1>
+            <!-- Text Side (Top on Mobile, Left on Desktop) -->
+            <div class="lg:col-span-7 order-1 flex flex-col items-start z-20">
+                
+                <!-- Badge -->
+                <div class="reveal-up inline-flex items-center gap-2 px-3 py-1 mb-6 rounded-full border border-acid/50 bg-acid/10 text-acid text-[10px] font-bold uppercase tracking-widest">
+                    <span class="w-1.5 h-1.5 rounded-full bg-acid animate-pulse"></span> Available for Hire
+                </div>
+
+                <!-- Massive H1 (Adjusted Mobile Size) -->
+                <h1 class="font-display font-black text-4xl sm:text-6xl md:text-8xl lg:text-9xl leading-[0.9] tracking-tighter mb-8 mix-blend-difference text-black dark:text-white">
+                    <div class="overflow-hidden"><span class="block reveal-text">JAY</span></div>
+                    <div class="overflow-hidden"><span class="block reveal-text text-outline">KRISHNA</span></div>
+                    <div class="overflow-hidden"><span class="block reveal-text text-transparent bg-clip-text bg-gradient-to-r from-acid to-green-400">MANDAL</span></div>
+                </h1>
+
+                <!-- Intro Text -->
+                <p class="reveal-up text-base md:text-xl text-gray-600 dark:text-gray-400 max-w-lg leading-relaxed mb-10 pl-4 border-l-2 border-acid">
+                    I am a <strong>Full Stack Developer</strong> and <strong>UI Architect</strong>. I build high-performance realtime applications and immersive 3D web experiences that redefine digital interaction.
+                </p>
+
+                <!-- CTAs -->
+                <div class="reveal-up flex flex-wrap gap-4 w-full">
+                    <a href="#work" class="flex-1 sm:flex-none text-center px-8 py-4 bg-black dark:bg-white text-white dark:text-black font-bold uppercase text-xs tracking-widest rounded-full hover:bg-acid hover:text-black transition-colors duration-300">
+                        View Projects
+                    </a>
+                    <a href="#contact" class="flex-1 sm:flex-none text-center px-8 py-4 border border-gray-300 dark:border-white/20 font-bold uppercase text-xs tracking-widest rounded-full hover:bg-white/5 transition-colors duration-300">
+                        Contact Me
+                    </a>
+                </div>
+            </div>
+
+            <!-- Image Side (Bottom on Mobile, Right on Desktop) -->
+            <div class="lg:col-span-5 order-2 relative reveal-scale opacity-0 mt-8 lg:mt-0">
+                <div class="relative w-full max-w-md mx-auto aspect-[4/5]">
+                    <!-- Decorative Ring -->
+                    <div class="absolute inset-0 border border-acid/30 rounded-full scale-110 animate-[spin_15s_linear_infinite]"></div>
                     
-                    <!-- Long Bio Text -->
-                    <div class="reveal-text opacity-0 translate-y-10">
-                        <p class="text-lg md:text-xl text-gray-600 dark:text-gray-300 leading-relaxed max-w-3xl border-l-4 border-accent pl-6">
-                            I am a creative Full-Stack Developer and UI/UX Designer obsessed with performance and aesthetics. My journey involves crafting digital ecosystems where <strong>engineering meets art</strong>. 
-                            <br><br>
-                            From conceptualizing fluid user interfaces in Figma to architecting robust, scalable backends with Node.js, I handle the entire product lifecycle. I don't just write code; I build immersive experiences that live on the web and mobile devices, ensuring every pixel and every byte serves a purpose.
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Profile Widget -->
-                <div class="lg:w-1/3 relative group reveal-text opacity-0 translate-y-10 delay-100">
-                    <div class="w-full h-full min-h-[400px] bg-card rounded-[2rem] overflow-hidden border border-white/10 relative">
-                        <img src="/PROFILE.png" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition duration-700 transform group-hover:scale-105">
+                    <!-- Main Image Container -->
+                    <div class="absolute inset-0 rounded-[3rem] overflow-hidden border-4 border-white dark:border-[#111] shadow-2xl">
+                        <img src="/PROFILE.png" 
+                             alt="Jay Krishna Mandal" 
+                             class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700">
+                        
+                        <!-- Overlay Card -->
                         <div class="absolute bottom-0 left-0 w-full p-6 bg-gradient-to-t from-black to-transparent">
-                            <h3 class="text-white font-bold text-xl">Developer & Designer</h3>
-                            <p class="text-gray-400 text-sm">Based in Nepal</p>
+                            <h3 class="text-white font-display font-bold text-2xl">Developer.</h3>
+                            <p class="text-acid text-sm">Kathmandu, Nepal</p>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <!-- Bottom Section: Widgets -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <!-- Stat 1 -->
-                <div class="bento-card bg-white dark:bg-card p-6 rounded-3xl border border-gray-200 dark:border-white/10 reveal-text">
-                    <h3 class="text-4xl font-display font-bold text-accent">5+</h3>
-                    <p class="text-sm font-bold uppercase tracking-wider text-gray-500">Years Experience</p>
-                </div>
-                <!-- Stat 2 -->
-                <div class="bento-card bg-white dark:bg-card p-6 rounded-3xl border border-gray-200 dark:border-white/10 reveal-text">
-                    <h3 class="text-4xl font-display font-bold text-accent">50+</h3>
-                    <p class="text-sm font-bold uppercase tracking-wider text-gray-500">Projects Done</p>
-                </div>
-                <!-- Tech Stack Widget -->
-                <div class="col-span-2 bento-card bg-white dark:bg-card p-6 rounded-3xl border border-gray-200 dark:border-white/10 flex items-center justify-between reveal-text">
-                    <div>
-                        <h4 class="font-bold text-lg mb-1">Core Stack</h4>
-                        <div class="flex gap-2 text-2xl text-gray-400">
-                            <i class="ri-reactjs-fill hover:text-blue-400 transition"></i>
-                            <i class="ri-nodejs-line hover:text-green-500 transition"></i>
-                            <i class="ri-flutter-fill hover:text-blue-500 transition"></i>
-                            <i class="ri-database-2-line hover:text-accent transition"></i>
-                        </div>
-                    </div>
-                    <div class="h-10 w-10 rounded-full bg-accent flex items-center justify-center">
-                        <i class="ri-stack-line text-black"></i>
-                    </div>
-                </div>
-            </div>
-
         </div>
     </header>
 
-    <!-- Services Section -->
-    <section id="services" class="py-20 px-4 md:px-8 bg-white dark:bg-[#0c0c0c] relative z-10">
-        <div class="max-w-7xl mx-auto">
-            <div class="flex flex-col md:flex-row justify-between items-end mb-16 border-b border-gray-200 dark:border-white/10 pb-8">
-                <div>
-                    <span class="text-accent font-bold uppercase tracking-widest text-sm">What I Do</span>
-                    <h2 class="font-display font-bold text-5xl md:text-6xl mt-2">My Services</h2>
-                </div>
-                <p class="text-gray-500 max-w-md mt-4 md:mt-0">Comprehensive digital solutions tailored to scale your business.</p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                
-                <!-- Service 1 -->
-                <div class="group bento-card bg-gray-50 dark:bg-card p-8 rounded-3xl border border-gray-200 dark:border-white/10 relative overflow-hidden">
-                    <div class="w-14 h-14 bg-blue-500/10 rounded-full flex items-center justify-center mb-6 group-hover:bg-blue-500 group-hover:text-white transition-colors duration-300">
-                        <i class="ri-layout-3-line text-2xl text-blue-500 group-hover:text-white"></i>
-                    </div>
-                    <h3 class="text-2xl font-bold font-display mb-3">Web Development</h3>
-                    <p class="text-gray-500 dark:text-gray-400 text-sm leading-relaxed mb-6">
-                        High-performance websites built with React, Next.js, and GSAP. SEO optimized and responsive across all devices.
-                    </p>
-                    <ul class="space-y-2 text-sm text-gray-400">
-                        <li class="flex items-center gap-2"><i class="ri-check-line text-accent"></i> SPA & PWA</li>
-                        <li class="flex items-center gap-2"><i class="ri-check-line text-accent"></i> CMS Integration</li>
-                        <li class="flex items-center gap-2"><i class="ri-check-line text-accent"></i> E-commerce</li>
-                    </ul>
-                </div>
-
-                <!-- Service 2 -->
-                <div class="group bento-card bg-gray-50 dark:bg-card p-8 rounded-3xl border border-gray-200 dark:border-white/10 relative overflow-hidden">
-                    <div class="w-14 h-14 bg-green-500/10 rounded-full flex items-center justify-center mb-6 group-hover:bg-green-500 group-hover:text-white transition-colors duration-300">
-                        <i class="ri-smartphone-line text-2xl text-green-500 group-hover:text-white"></i>
-                    </div>
-                    <h3 class="text-2xl font-bold font-display mb-3">App Development</h3>
-                    <p class="text-gray-500 dark:text-gray-400 text-sm leading-relaxed mb-6">
-                        Native-like mobile applications using Flutter and React Native. Smooth animations and offline capabilities.
-                    </p>
-                    <ul class="space-y-2 text-sm text-gray-400">
-                        <li class="flex items-center gap-2"><i class="ri-check-line text-accent"></i> iOS & Android</li>
-                        <li class="flex items-center gap-2"><i class="ri-check-line text-accent"></i> Realtime Chat</li>
-                        <li class="flex items-center gap-2"><i class="ri-check-line text-accent"></i> API Integration</li>
-                    </ul>
-                </div>
-
-                <!-- Service 3 -->
-                <div class="group bento-card bg-gray-50 dark:bg-card p-8 rounded-3xl border border-gray-200 dark:border-white/10 relative overflow-hidden">
-                    <div class="w-14 h-14 bg-purple-500/10 rounded-full flex items-center justify-center mb-6 group-hover:bg-purple-500 group-hover:text-white transition-colors duration-300">
-                        <i class="ri-pen-nib-line text-2xl text-purple-500 group-hover:text-white"></i>
-                    </div>
-                    <h3 class="text-2xl font-bold font-display mb-3">UI/UX Design</h3>
-                    <p class="text-gray-500 dark:text-gray-400 text-sm leading-relaxed mb-6">
-                        User-centric design that converts. Wireframing, prototyping, and high-fidelity mockups using Figma.
-                    </p>
-                    <ul class="space-y-2 text-sm text-gray-400">
-                        <li class="flex items-center gap-2"><i class="ri-check-line text-accent"></i> User Research</li>
-                        <li class="flex items-center gap-2"><i class="ri-check-line text-accent"></i> Prototyping</li>
-                        <li class="flex items-center gap-2"><i class="ri-check-line text-accent"></i> Design Systems</li>
-                    </ul>
-                </div>
-
-            </div>
-        </div>
-    </section>
-
-    <!-- Infinite Marquee -->
-    <div class="py-10 bg-accent overflow-hidden -rotate-1 scale-105 border-y-4 border-black">
-        <div class="flex whitespace-nowrap gap-12 animate-[marquee_20s_linear_infinite]">
-            <span class="text-4xl font-display font-black text-black">JAY KRISHNA MANDAL</span>
-            <span class="text-4xl font-display font-black text-white stroke-black">WEB DEVELOPER</span>
-            <span class="text-4xl font-display font-black text-black">APP DEVELOPER</span>
-            <span class="text-4xl font-display font-black text-white stroke-black">UI/UX DESIGNER</span>
-            <span class="text-4xl font-display font-black text-black">JAY KRISHNA MANDAL</span>
-            <span class="text-4xl font-display font-black text-white stroke-black">WEB DEVELOPER</span>
-            <span class="text-4xl font-display font-black text-black">APP DEVELOPER</span>
+    <!-- TECH STACK MARQUEE -->
+    <div class="py-8 bg-acid overflow-hidden -rotate-1 border-y-4 border-black z-20 relative">
+        <div class="flex whitespace-nowrap gap-12 animate-[marquee_20s_linear_infinite] font-display font-black text-3xl md:text-4xl text-black uppercase items-center">
+            <span>React</span> <i class="ri-flashlight-fill"></i>
+            <span>Node.js</span> <i class="ri-flashlight-fill"></i>
+            <span>Flutter</span> <i class="ri-flashlight-fill"></i>
+            <span>Socket.io</span> <i class="ri-flashlight-fill"></i>
+            <span>MongoDB</span> <i class="ri-flashlight-fill"></i>
+            <span>GSAP</span> <i class="ri-flashlight-fill"></i>
+            <span>React</span> <i class="ri-flashlight-fill"></i>
+            <span>Node.js</span> <i class="ri-flashlight-fill"></i>
         </div>
     </div>
 
-    <!-- Chat App Demo Section -->
-    <section id="chat-section" class="py-24 px-4 bg-dark relative overflow-hidden">
-        <!-- Ambient Background -->
-        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-accent/5 rounded-full blur-[120px] pointer-events-none"></div>
-
-        <div class="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-16 relative z-10">
-            
-            <!-- Phone Mockup -->
-            <div class="order-2 lg:order-1 lg:w-1/2 flex justify-center">
-                <div class="w-[340px] h-[680px] bg-black rounded-[45px] border-[8px] border-neutral-800 shadow-2xl relative overflow-hidden ring-4 ring-white/5">
-                    <!-- Dynamic Island -->
-                    <div class="absolute top-4 left-1/2 -translate-x-1/2 w-28 h-7 bg-black rounded-full z-30"></div>
-                    
-                    <!-- App UI -->
-                    <div class="w-full h-full bg-[#111] flex flex-col">
-                        <!-- Header -->
-                        <div class="pt-14 pb-4 px-5 bg-[#1a1a1a] flex justify-between items-center border-b border-white/5">
-                            <div class="flex items-center gap-3">
-                                <img src="/PROFILE.png" class="w-10 h-10 rounded-full object-cover border-2 border-green-500">
-                                <div>
-                                    <h4 class="text-white text-sm font-bold">Jay Krishna</h4>
-                                    <span class="text-[10px] text-green-500 font-bold uppercase tracking-wider">Online</span>
-                                </div>
-                            </div>
-                            <i class="ri-video-add-line text-gray-400"></i>
-                        </div>
-
-                        <!-- Chat Area -->
-                        <div id="chat-box" class="flex-1 p-4 overflow-y-auto flex flex-col gap-3">
-                            <!-- JS will inject messages here -->
-                        </div>
-
-                        <!-- Input -->
-                        <div class="p-4 bg-[#1a1a1a] border-t border-white/5 flex gap-2">
-                            <input type="text" placeholder="Type a message..." class="flex-1 bg-[#222] rounded-full px-4 text-sm text-white focus:outline-none focus:ring-1 focus:ring-accent" disabled>
-                            <button class="w-10 h-10 rounded-full bg-accent flex items-center justify-center text-black">
-                                <i class="ri-send-plane-fill"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Content -->
-            <div class="order-1 lg:order-2 lg:w-1/2 text-center lg:text-left">
-                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 mb-6">
-                    <span class="w-2 h-2 bg-red-500 rounded-full animate-ping"></span>
-                    <span class="text-xs font-bold text-white uppercase tracking-widest">Live Demo</span>
-                </div>
-                
-                <h2 class="text-5xl md:text-7xl font-display font-bold text-white mb-6">
-                    Realtime <br> <span class="text-accent">Chat Application</span>
-                </h2>
-                
-                <p class="text-gray-400 text-lg mb-8 leading-relaxed">
-                    Experience seamless communication. This application utilizes <strong>WebSockets</strong> for bi-directional event-based communication. It features typing indicators, read receipts, and media sharing, all wrapped in a glassmorphic UI.
+    <!-- ABOUT / NARRATIVE SECTION -->
+    <section id="about" class="py-24 px-4 md:px-8 bg-white dark:bg-panel relative z-10">
+        <div class="max-w-4xl mx-auto text-center md:text-left">
+            <span class="text-acid font-bold uppercase tracking-widest text-xs mb-4 block">The Narrative</span>
+            <!-- Modified Size for Mobile -->
+            <h2 class="font-display font-black text-3xl md:text-6xl mb-8 leading-tight">
+                CRAFTING DIGITAL <br> <span class="text-transparent bg-clip-text bg-gradient-to-r from-acid to-green-500">ECOSYSTEMS.</span>
+            </h2>
+            <div class="space-y-6 text-lg md:text-xl text-gray-600 dark:text-gray-400 font-light leading-relaxed">
+                <p>
+                    I don't just write code; I engineer solutions. With a background in <strong class="text-black dark:text-white">Computer Science</strong> and a passion for <strong class="text-black dark:text-white">Visual Arts</strong>, I bridge the gap between robust backend logic and fluid frontend interactivity.
                 </p>
-
-                <div class="flex flex-wrap gap-4 justify-center lg:justify-start">
-                    <button id="run-demo" class="px-8 py-4 bg-accent text-black font-bold rounded-xl hover:bg-white transition-colors flex items-center gap-2">
-                        <i class="ri-play-circle-line text-xl"></i> Run Simulation
-                    </button>
-                    <a href="#" class="px-8 py-4 border border-white/20 text-white font-bold rounded-xl hover:bg-white/10 transition-colors">
-                        View Codebase
-                    </a>
+                <p>
+                    My philosophy is simple: <strong>User Experience is King, Performance is Queen.</strong> Whether it's a high-frequency trading dashboard or a cross-platform mobile app, I ensure every pixel serves a purpose and every byte is optimized.
+                </p>
+                <p>
+                    Currently, I'm obsessed with <strong class="text-acid">Realtime WebSockets</strong> and <strong>3D WebGL</strong> interactions.
+                </p>
+            </div>
+            
+            <div class="mt-12 grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div class="p-4 border border-gray-200 dark:border-white/10 rounded-2xl">
+                    <h4 class="text-3xl font-display font-bold text-acid">05+</h4>
+                    <p class="text-xs uppercase font-bold text-gray-500">Years Exp</p>
                 </div>
-
-                <div class="mt-12 grid grid-cols-3 gap-4 border-t border-white/10 pt-8">
-                    <div>
-                        <h4 class="text-2xl font-bold text-white">React</h4>
-                        <p class="text-xs text-gray-500 uppercase">Frontend</p>
-                    </div>
-                    <div>
-                        <h4 class="text-2xl font-bold text-white">Node</h4>
-                        <p class="text-xs text-gray-500 uppercase">Backend</p>
-                    </div>
-                    <div>
-                        <h4 class="text-2xl font-bold text-white">Socket.io</h4>
-                        <p class="text-xs text-gray-500 uppercase">Realtime</p>
-                    </div>
+                <div class="p-4 border border-gray-200 dark:border-white/10 rounded-2xl">
+                    <h4 class="text-3xl font-display font-bold text-acid">50+</h4>
+                    <p class="text-xs uppercase font-bold text-gray-500">Projects</p>
+                </div>
+                <div class="p-4 border border-gray-200 dark:border-white/10 rounded-2xl">
+                    <h4 class="text-3xl font-display font-bold text-acid">100%</h4>
+                    <p class="text-xs uppercase font-bold text-gray-500">Success Rate</p>
                 </div>
             </div>
-
         </div>
     </section>
 
-    <!-- Projects Section -->
-    <section id="projects" class="py-20 px-4 md:px-8 bg-light dark:bg-[#080808]">
+    <!-- SERVICES (BENTO GRID) -->
+    <section id="services" class="py-24 px-4 md:px-8">
         <div class="max-w-7xl mx-auto">
-            <h2 class="font-display font-bold text-4xl md:text-5xl mb-12">Featured Works</h2>
+            <!-- Modified Size for Mobile -->
+            <h2 class="font-display font-black text-4xl md:text-7xl mb-16">SERVICES</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Card 1 -->
+                <div class="glass p-8 rounded-[2rem] hover:-translate-y-2 transition-transform duration-300 md:col-span-2 group">
+                    <div class="flex justify-between items-start mb-6">
+                        <div class="w-12 h-12 bg-acid rounded-full flex items-center justify-center text-xl text-black font-bold">01</div>
+                        <i class="ri-layout-masonry-line text-4xl opacity-50 group-hover:opacity-100 transition-opacity"></i>
+                    </div>
+                    <h3 class="text-2xl md:text-3xl font-display font-bold mb-4">Web Development</h3>
+                    <p class="text-gray-500 dark:text-gray-400">
+                        Building blazing fast SPAs and PWAs with Next.js. I focus on modular component architecture, SEO optimization, and accessibility.
+                    </p>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="glass p-8 rounded-[2rem] hover:-translate-y-2 transition-transform duration-300 group">
+                    <div class="flex justify-between items-start mb-6">
+                        <div class="w-12 h-12 bg-white dark:bg-white/10 rounded-full flex items-center justify-center text-xl font-bold border border-white/10">02</div>
+                        <i class="ri-smartphone-line text-4xl opacity-50 group-hover:text-acid transition-colors"></i>
+                    </div>
+                    <h3 class="text-2xl font-display font-bold mb-4">Mobile Apps</h3>
+                    <p class="text-gray-500 dark:text-gray-400 text-sm">
+                        Native-performance apps using Flutter and React Native for iOS & Android.
+                    </p>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="glass p-8 rounded-[2rem] hover:-translate-y-2 transition-transform duration-300 group">
+                    <div class="flex justify-between items-start mb-6">
+                        <div class="w-12 h-12 bg-white dark:bg-white/10 rounded-full flex items-center justify-center text-xl font-bold border border-white/10">03</div>
+                        <i class="ri-server-line text-4xl opacity-50 group-hover:text-acid transition-colors"></i>
+                    </div>
+                    <h3 class="text-2xl font-display font-bold mb-4">Backend API</h3>
+                    <p class="text-gray-500 dark:text-gray-400 text-sm">
+                        Scalable Node.js architectures, GraphQL, and database optimization (MongoDB/PostgreSQL).
+                    </p>
+                </div>
+
+                <!-- Card 4 -->
+                <div class="glass p-8 rounded-[2rem] hover:-translate-y-2 transition-transform duration-300 md:col-span-2 group">
+                    <div class="flex justify-between items-start mb-6">
+                        <div class="w-12 h-12 bg-acid rounded-full flex items-center justify-center text-xl text-black font-bold">04</div>
+                        <i class="ri-pen-nib-line text-4xl opacity-50 group-hover:opacity-100 transition-opacity"></i>
+                    </div>
+                    <h3 class="text-2xl md:text-3xl font-display font-bold mb-4">UI/UX Design</h3>
+                    <p class="text-gray-500 dark:text-gray-400">
+                        Designing intuitive user journeys in Figma. I create design systems that ensure consistency and visual harmony across your entire product suite.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- INTERACTIVE CHAT DEMO -->
+    <section id="chat-demo" class="py-24 px-4 md:px-8 bg-dark relative overflow-hidden text-white">
+        <!-- Glow Effect -->
+        <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-acid/5 rounded-full blur-[120px] pointer-events-none"></div>
+
+        <div class="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-16 relative z-10">
             
+            <!-- Left Text -->
+            <div class="lg:w-1/2">
+                <span class="text-acid font-bold uppercase tracking-widest text-xs mb-4 block">● Live Interaction</span>
+                <!-- Modified Size for Mobile -->
+                <h2 class="text-4xl md:text-7xl font-display font-black mb-6">
+                    INSTANT <br> CONNECTION.
+                </h2>
+                <p class="text-gray-400 text-lg mb-8 leading-relaxed">
+                    This is a simulation of a realtime chat application powered by <strong class="text-white">WebSockets</strong>. 
+                    It features bi-directional event emission for typing indicators, messages, and online status.
+                </p>
+
+                <!-- Metrics -->
+                <div class="grid grid-cols-2 gap-4 mb-8">
+                    <div class="p-4 rounded-xl border border-white/10 bg-white/5">
+                        <h4 class="text-2xl font-bold">15ms</h4>
+                        <p class="text-xs text-gray-500">Latency</p>
+                    </div>
+                    <div class="p-4 rounded-xl border border-white/10 bg-white/5">
+                        <h4 class="text-2xl font-bold">E2E</h4>
+                        <p class="text-xs text-gray-500">Encrypted</p>
+                    </div>
+                </div>
+
+                <div class="flex gap-4">
+                    <button onclick="restartChat()" class="px-6 py-3 bg-acid text-black font-bold rounded-full hover:bg-white transition flex items-center gap-2">
+                        <i class="ri-refresh-line"></i> Restart
+                    </button>
+                    <button class="px-6 py-3 border border-white/20 font-bold rounded-full hover:bg-white/10 transition">
+                        View Code
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Phone Mockup -->
+            <div class="lg:w-1/2 w-full flex justify-center">
+                <div class="relative w-[320px] md:w-[360px] h-[680px] bg-[#0c0c0c] rounded-[3rem] border-[8px] border-[#1a1a1a] shadow-2xl flex flex-col overflow-hidden">
+                    <!-- Notch -->
+                    <div class="absolute top-4 left-1/2 -translate-x-1/2 w-28 h-7 bg-black rounded-full z-20"></div>
+
+                    <!-- App Header -->
+                    <div class="pt-14 pb-4 px-5 bg-[#151515] border-b border-white/5 flex items-center gap-3">
+                        <div class="relative">
+                            <img src="/PROFILE.png" class="w-10 h-10 rounded-full border border-acid">
+                            <div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border border-black"></div>
+                        </div>
+                        <div>
+                            <h4 class="text-white text-sm font-bold">Jay Krishna</h4>
+                            <span class="text-[10px] text-acid">Online</span>
+                        </div>
+                    </div>
+
+                    <!-- Chat Box -->
+                    <div id="chat-box" class="flex-1 bg-black/50 p-4 flex flex-col gap-3 overflow-y-auto">
+                        <!-- Messages via JS -->
+                    </div>
+
+                    <!-- Input -->
+                    <div class="p-4 bg-[#151515] border-t border-white/5 flex gap-2">
+                        <div class="flex-1 h-10 bg-[#222] rounded-full px-4 flex items-center text-xs text-gray-500">Type message...</div>
+                        <button class="w-10 h-10 bg-acid rounded-full flex items-center justify-center text-black"><i class="ri-send-plane-fill"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SELECTED WORKS -->
+    <section id="work" class="py-24 px-4 md:px-8 bg-white dark:bg-panel">
+        <div class="max-w-7xl mx-auto">
+            <!-- Modified Size for Mobile -->
+            <h2 class="font-display font-black text-4xl md:text-7xl mb-16 text-black dark:text-white">PROJECTS</h2>
+
             <!-- Project 1 -->
-            <div class="group relative grid grid-cols-1 md:grid-cols-2 gap-8 mb-20 items-center">
-                <div class="aspect-video bg-gray-200 dark:bg-card rounded-3xl overflow-hidden shadow-lg border border-gray-200 dark:border-white/5">
-                    <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2426&auto=format&fit=crop" class="w-full h-full object-cover transition duration-700 group-hover:scale-110">
+            <div class="group grid grid-cols-1 lg:grid-cols-2 gap-12 mb-24 items-center">
+                <div class="aspect-video bg-gray-200 dark:bg-black rounded-[2rem] overflow-hidden relative shadow-lg">
+                    <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition duration-700">
                 </div>
                 <div>
-                    <span class="text-accent font-bold text-xs uppercase tracking-widest mb-2 block">FinTech</span>
-                    <h3 class="text-3xl font-bold mb-4">Crypto Dashboard</h3>
-                    <p class="text-gray-500 dark:text-gray-400 mb-6 leading-relaxed">
-                        A comprehensive dashboard for tracking cryptocurrency trends in real-time. Built with Next.js and D3.js for data visualization. Features include wallet integration and live price alerts.
+                    <span class="text-acid font-bold text-xs uppercase tracking-widest mb-2 block">FinTech</span>
+                    <h3 class="font-display font-bold text-3xl md:text-4xl mb-4 text-black dark:text-white">Crypto Analytics</h3>
+                    <p class="text-gray-500 dark:text-gray-400 mb-6 text-lg">
+                        Realtime dashboard for tracking cryptocurrency markets. Features interactive D3.js charts, wallet connection, and live price alerts via WebSockets.
                     </p>
-                    <div class="flex gap-3 mb-6">
-                        <span class="px-3 py-1 bg-white dark:bg-card border border-gray-200 dark:border-white/10 rounded-lg text-xs font-bold">Next.js</span>
-                        <span class="px-3 py-1 bg-white dark:bg-card border border-gray-200 dark:border-white/10 rounded-lg text-xs font-bold">Tailwind</span>
-                        <span class="px-3 py-1 bg-white dark:bg-card border border-gray-200 dark:border-white/10 rounded-lg text-xs font-bold">Web3.js</span>
+                    <div class="flex gap-2">
+                        <span class="px-3 py-1 border border-gray-300 dark:border-white/20 rounded-lg text-xs font-bold uppercase">React</span>
+                        <span class="px-3 py-1 border border-gray-300 dark:border-white/20 rounded-lg text-xs font-bold uppercase">D3.js</span>
+                        <span class="px-3 py-1 border border-gray-300 dark:border-white/20 rounded-lg text-xs font-bold uppercase">Python</span>
                     </div>
-                    <a href="#" class="inline-flex items-center gap-2 text-sm font-bold uppercase border-b border-black dark:border-white pb-1 hover:text-accent hover:border-accent transition-colors">
-                        View Project <i class="ri-arrow-right-line"></i>
-                    </a>
                 </div>
             </div>
 
             <!-- Project 2 -->
-            <div class="group relative grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                <div class="md:order-2 aspect-video bg-gray-200 dark:bg-card rounded-3xl overflow-hidden shadow-lg border border-gray-200 dark:border-white/5">
-                    <img src="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?q=80&w=2070&auto=format&fit=crop" class="w-full h-full object-cover transition duration-700 group-hover:scale-110">
+            <div class="group grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div class="lg:order-2 aspect-video bg-gray-200 dark:bg-black rounded-[2rem] overflow-hidden relative shadow-lg">
+                    <img src="https://images.unsplash.com/photo-1512428559087-560fa0db79b6?q=80&w=2070&auto=format&fit=crop" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition duration-700">
                 </div>
-                <div class="md:order-1">
-                    <span class="text-accent font-bold text-xs uppercase tracking-widest mb-2 block">E-Commerce</span>
-                    <h3 class="text-3xl font-bold mb-4">Fashion Store App</h3>
-                    <p class="text-gray-500 dark:text-gray-400 mb-6 leading-relaxed">
-                        A full-featured mobile application for a luxury fashion brand. Includes AR try-on features, seamless checkout with Stripe, and personalized recommendations using AI.
+                <div class="lg:order-1 lg:text-right flex flex-col lg:items-end">
+                    <span class="text-acid font-bold text-xs uppercase tracking-widest mb-2 block">E-Commerce</span>
+                    <h3 class="font-display font-bold text-3xl md:text-4xl mb-4 text-black dark:text-white">Fashion Store App</h3>
+                    <p class="text-gray-500 dark:text-gray-400 mb-6 text-lg">
+                        A seamless mobile shopping experience built with Flutter. Includes AR try-on features, AI-based recommendations, and Stripe payment integration.
                     </p>
-                    <div class="flex gap-3 mb-6">
-                        <span class="px-3 py-1 bg-white dark:bg-card border border-gray-200 dark:border-white/10 rounded-lg text-xs font-bold">Flutter</span>
-                        <span class="px-3 py-1 bg-white dark:bg-card border border-gray-200 dark:border-white/10 rounded-lg text-xs font-bold">Firebase</span>
-                        <span class="px-3 py-1 bg-white dark:bg-card border border-gray-200 dark:border-white/10 rounded-lg text-xs font-bold">AI</span>
+                    <div class="flex gap-2">
+                        <span class="px-3 py-1 border border-gray-300 dark:border-white/20 rounded-lg text-xs font-bold uppercase">Flutter</span>
+                        <span class="px-3 py-1 border border-gray-300 dark:border-white/20 rounded-lg text-xs font-bold uppercase">Firebase</span>
                     </div>
-                    <a href="#" class="inline-flex items-center gap-2 text-sm font-bold uppercase border-b border-black dark:border-white pb-1 hover:text-accent hover:border-accent transition-colors">
-                        View Project <i class="ri-arrow-right-line"></i>
-                    </a>
                 </div>
             </div>
-
         </div>
     </section>
 
-    <!-- Footer -->
-    <footer id="contact" class="bg-card text-white pt-24 pb-12 px-4 md:px-8 border-t border-white/10">
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between">
-            <div class="mb-10 md:mb-0">
-                <h2 class="font-display font-black text-6xl md:text-8xl tracking-tighter mb-4">LET'S<br><span class="text-accent">BUILD.</span></h2>
-                <a href="mailto:jay@mandal.com" class="text-2xl hover:text-accent transition-colors">jaykrishnamandal@gmail.com</a>
+    <!-- FOOTER -->
+    <footer id="contact" class="bg-black text-white pt-24 pb-12 px-4 md:px-8 border-t border-white/10">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start gap-12">
+            <div>
+                <!-- Modified Size for Mobile -->
+                <h2 class="font-display font-black text-5xl md:text-9xl mb-6">LET'S <br> <span class="text-acid">BUILD.</span></h2>
+                <a href="mailto:jay@mandal.com" class="text-2xl hover:text-acid transition-colors border-b border-white/20 pb-1">jaykrishnamandal@gmail.com</a>
             </div>
             
-            <div class="flex flex-col justify-end items-start md:items-end gap-6">
+            <div class="flex flex-col items-start md:items-end gap-6">
                 <div class="flex gap-4">
-                    <a href="#" class="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center hover:bg-accent hover:text-black hover:border-accent transition duration-300">
-                        <i class="ri-linkedin-fill text-xl"></i>
-                    </a>
-                    <a href="#" class="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center hover:bg-accent hover:text-black hover:border-accent transition duration-300">
-                        <i class="ri-github-fill text-xl"></i>
-                    </a>
-                    <a href="#" class="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center hover:bg-accent hover:text-black hover:border-accent transition duration-300">
-                        <i class="ri-twitter-x-fill text-xl"></i>
-                    </a>
+                    <a href="#" class="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center hover:bg-acid hover:text-black hover:border-acid transition"><i class="ri-linkedin-fill text-xl"></i></a>
+                    <a href="#" class="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center hover:bg-acid hover:text-black hover:border-acid transition"><i class="ri-github-fill text-xl"></i></a>
+                    <a href="#" class="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center hover:bg-acid hover:text-black hover:border-acid transition"><i class="ri-twitter-x-fill text-xl"></i></a>
                 </div>
-                <p class="text-gray-500 text-sm">© 2025 Jay Krishna Mandal. All rights reserved.</p>
+                <div class="text-gray-500 text-sm md:text-right">
+                    <p>© 2025 Jay Krishna Mandal.</p>
+                    <p>Designed with Passion.</p>
+                </div>
             </div>
         </div>
     </footer>
 
-    <!-- Scripts -->
+    <!-- SCRIPTS -->
+    <script src="https://cdn.jsdelivr.net/gh/studio-freight/lenis@1.0.29/bundled/lenis.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/studio-freight/lenis@1.0.29/bundled/lenis.min.js"></script>
 
     <script>
-        // 1. Lenis Smooth Scroll
+        // 1. LIQUID THEME TRANSITION
+        const themeBtn = document.getElementById('theme-btn');
+        const overlay = document.querySelector('.theme-overlay');
+        const html = document.documentElement;
+
+        themeBtn.addEventListener('click', (e) => {
+            const rect = themeBtn.getBoundingClientRect();
+            const x = rect.left + rect.width / 2;
+            const y = rect.top + rect.height / 2;
+            
+            // Determine target color (if currently dark, we go light -> white overlay)
+            const isGoingDark = !html.classList.contains('dark');
+            overlay.style.backgroundColor = isGoingDark ? '#050505' : '#F2F2F2';
+
+            const tl = gsap.timeline();
+            
+            tl.set(overlay, { 
+                clipPath: `circle(0% at ${x}px ${y}px)`,
+                autoAlpha: 1 
+            })
+            .to(overlay, {
+                clipPath: `circle(150% at ${x}px ${y}px)`,
+                duration: 0.8,
+                ease: "power4.inOut",
+                onUpdate: function() {
+                    // Toggle halfway
+                    if (this.progress() > 0.5) {
+                        if (isGoingDark) html.classList.add('dark');
+                        else html.classList.remove('dark');
+                    }
+                }
+            })
+            .to(overlay, {
+                autoAlpha: 0,
+                duration: 0.3
+            });
+            
+            localStorage.setItem('theme', isGoingDark ? 'dark' : 'light');
+        });
+
+        // 2. SMOOTH SCROLL
         const lenis = new Lenis();
         function raf(time) {
             lenis.raf(time);
@@ -450,102 +517,94 @@
         }
         requestAnimationFrame(raf);
 
-        // 2. Theme Toggle
-        const themeToggle = document.getElementById('theme-toggle');
-        const html = document.documentElement;
-
-        themeToggle.addEventListener('click', () => {
-            html.classList.toggle('dark');
-            localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
-        });
-
-        // 3. GSAP Animations
+        // 3. ANIMATIONS (GSAP)
         gsap.registerPlugin(ScrollTrigger);
 
         // Hero Reveal
-        gsap.to(".reveal-text", {
-            y: 0,
-            opacity: 1,
+        const heroTl = gsap.timeline();
+        heroTl.from(".reveal-text", {
+            y: 150,
+            duration: 1.2,
+            stagger: 0.1,
+            ease: "power4.out"
+        })
+        .from(".reveal-up", {
+            y: 50,
+            opacity: 0,
             duration: 1,
-            stagger: 0.15,
-            ease: "power3.out"
-        });
+            stagger: 0.1,
+            ease: "power2.out"
+        }, "-=0.8")
+        .to(".reveal-scale", {
+            opacity: 1,
+            scale: 1,
+            duration: 1,
+            ease: "power2.out"
+        }, "-=0.8");
 
         // Section Headers
-        gsap.utils.toArray('h2').forEach(heading => {
-            gsap.from(heading, {
-                scrollTrigger: {
-                    trigger: heading,
-                    start: "top 80%",
-                },
-                y: 30,
+        gsap.utils.toArray('h2').forEach(title => {
+            gsap.from(title, {
+                scrollTrigger: { trigger: title, start: "top 80%" },
+                y: 50,
                 opacity: 0,
                 duration: 1,
                 ease: "power2.out"
             });
         });
 
-        // 4. Chat Simulation
+        // 4. CHAT SIMULATION
         const chatBox = document.getElementById('chat-box');
-        const messages = [
-            { side: 'left', text: "Hey! Love the portfolio design. 😍" },
-            { side: 'right', text: "Thanks! I built it using Tailwind & GSAP." },
-            { side: 'left', text: "Can you build a realtime chat app for us?" },
-            { side: 'right', text: "Absolutely! I specialize in Socket.io." },
-            { side: 'left', text: "When can we schedule a meeting?" },
-            { side: 'right', text: "I'm free tomorrow. Let's do it! 🚀" }
+        const msgs = [
+            { t: 'left', m: "Hello! I need a realtime app." },
+            { t: 'right', m: "Hi! I can help with that. Stack?" },
+            { t: 'left', m: "MERN + Socket.io please." },
+            { t: 'right', m: "Perfect. I specialize in that." },
+            { t: 'left', m: "Great, let's start!" }
         ];
-
+        
         let msgIndex = 0;
-        let isChatRunning = false;
+        let isChatting = false;
 
-        function addMessage(side, text) {
+        function addMessage(type, text) {
             const div = document.createElement('div');
-            div.className = `max-w-[85%] p-3 rounded-2xl text-sm mb-2 opacity-0 msg-anim ${
-                side === 'right' 
-                ? 'self-end bg-accent text-black rounded-br-none' 
-                : 'self-start bg-[#333] text-white rounded-bl-none'
-            }`;
-            div.innerHTML = text;
+            const isRight = type === 'right';
+            div.className = `max-w-[85%] p-3 rounded-2xl text-xs msg-enter ${isRight ? 'self-end bg-acid text-black rounded-br-none' : 'self-start bg-[#222] text-gray-300 rounded-bl-none'}`;
+            div.innerText = text;
             chatBox.appendChild(div);
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
         function runChat() {
-            if(isChatRunning) return;
-            isChatRunning = true;
+            if(isChatting) return;
+            isChatting = true;
             chatBox.innerHTML = '';
             msgIndex = 0;
-
-            const interval = setInterval(() => {
-                if(msgIndex >= messages.length) {
-                    clearInterval(interval);
-                    isChatRunning = false;
-                    return;
-                }
-                addMessage(messages[msgIndex].side, messages[msgIndex].text);
+            const int = setInterval(() => {
+                if(msgIndex >= msgs.length) { clearInterval(int); isChatting = false; return; }
+                addMessage(msgs[msgIndex].t, msgs[msgIndex].m);
                 msgIndex++;
             }, 1200);
         }
 
-        document.getElementById('run-demo').addEventListener('click', () => {
-            isChatRunning = false;
-            runChat();
-        });
+        window.restartChat = () => { isChatting = false; runChat(); };
 
-        // Auto-start chat when visible
-        ScrollTrigger.create({
-            trigger: "#chat-section",
-            start: "top 60%",
-            onEnter: runChat
-        });
+        ScrollTrigger.create({ trigger: "#chat-demo", start: "top 60%", onEnter: runChat });
+
+        // 5. MOBILE MENU
+        const menuBtn = document.getElementById('menu-btn');
+        const closeMenu = document.getElementById('close-menu');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const mobileLinks = document.querySelectorAll('.mobile-link');
+
+        function toggleMenu() { mobileMenu.classList.toggle('translate-x-full'); }
+        menuBtn.addEventListener('click', toggleMenu);
+        closeMenu.addEventListener('click', toggleMenu);
+        mobileLinks.forEach(l => l.addEventListener('click', toggleMenu));
 
     </script>
     <style>
-        @keyframes marquee {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-        }
+        @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
     </style>
 </body>
 </html>
