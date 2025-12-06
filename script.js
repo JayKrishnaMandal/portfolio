@@ -249,16 +249,28 @@ async function joinRoomFromDash() {
     }
 }
 
+// --- CHAT & PRESENCE ---
+let currentRoomAdminUid = null;
+
 async function enterRoom(roomId, meta) {
     setLoading(true, 'Entering...');
     currentRoomId = roomId;
     currentRoomName = meta.name;
     currentRoomKey = meta.privateKey;
+    currentRoomAdminUid = meta.adminUid; // Store admin UID
     
     // Update header
     el.headerRoomName.textContent = currentRoomName;
     document.getElementById('headerRoomIcon').src = meta.icon;
     document.getElementById('headerRoomIcon').style.display = 'block';
+    
+    // Admin Gear Visibility
+    const btnSettings = document.getElementById('btnSettings');
+    if(currentUser.uid === meta.adminUid) {
+        btnSettings.style.display = 'block';
+    } else {
+        btnSettings.style.display = 'none';
+    }
     
     // Set Sidebar Info
     document.getElementById('sidebarRoomNameDisplay').textContent = currentRoomName;
@@ -274,15 +286,20 @@ async function enterRoom(roomId, meta) {
     setLoading(false);
 }
 
-// --- CHAT & PRESENCE ---
 function setupRoomListeners(roomId) {
     // 1. Messages
     const msgRef = child(ref(db), `rooms/${roomId}/messages`);
-    // Clear old listeners if any? (Simple app fallback: reload cleans up)
-    
-    // Clear UI
     el.messages.innerHTML = '';
     
+    // Check if banned
+    onValue(ref(db, `rooms/${roomId}/banned/${currentUser.uid}`), (s) => {
+        if(s.exists()) {
+            alert("You have been kicked from this room.");
+            showScreen('dashboard');
+            currentRoomId = null;
+        }
+    });
+
     onChildAdded(msgRef, (snap) => {
         renderMessage(snap.val());
         el.messages.scrollTop = el.messages.scrollHeight;
@@ -294,6 +311,52 @@ function setupRoomListeners(roomId) {
         renderMemberList(snap.val());
     });
 }
+
+function renderMemberList(members) {
+    el.memberList.innerHTML = '';
+    if (!members) return;
+
+    const myUid = currentUser.uid;
+    const adminUid = currentRoomAdminUid;
+
+    Object.entries(members).forEach(([uid, m]) => {
+        const div = document.createElement('div');
+        div.className = 'member-item';
+        
+        let actionBtn = '';
+        if(myUid === adminUid && uid !== myUid) {
+            actionBtn = `<i class="fa-solid fa-ban" style="color:#ff4444; margin-left:auto; padding:8px; cursor:pointer;" title="Kick User" onclick="kickMember('${uid}', '${escapeHtml(m.username)}')"></i>`;
+        }
+
+        const isRoomAdmin = (uid === adminUid);
+
+        div.innerHTML = `
+            <div class="member-avatar-wrapper">
+                <img src="${m.avatar}" class="member-avatar">
+                <div class="status-dot ${m.status}"></div>
+            </div>
+            <span style="font-size:14px; font-weight:600;">
+                ${escapeHtml(m.username)} 
+                ${isRoomAdmin ? '<i class="fa-solid fa-crown" style="color:#ffd700; margin-left:4px; font-size:12px;" title="Room Admin"></i>' : ''}
+            </span>
+            ${actionBtn}
+        `;
+        el.memberList.appendChild(div);
+    });
+}
+
+window.kickMember = async (targetUid, targetName) => {
+    if(!confirm(`Kick ${targetName}? They will be banned.`)) return;
+    
+    try {
+        // Add to banned list
+        await set(ref(db, `rooms/${currentRoomId}/banned/${targetUid}`), true);
+        // Remove from members
+        await remove(ref(db, `rooms/${currentRoomId}/members/${targetUid}`));
+    } catch(e) {
+        alert("Error kicking member: " + e.message);
+    }
+};
 
 function setPresence(roomId) {
     const userRef = ref(db, `rooms/${roomId}/members/${currentUser.uid}`);
@@ -308,23 +371,7 @@ function setPresence(roomId) {
     onDisconnect(userRef).remove(); // Auto remove
 }
 
-function renderMemberList(members) {
-    el.memberList.innerHTML = '';
-    if (!members) return;
-
-    Object.entries(members).forEach(([uid, m]) => {
-        const div = document.createElement('div');
-        div.className = 'member-item';
-        div.innerHTML = `
-            <div class="member-avatar-wrapper">
-                <img src="${m.avatar}" class="member-avatar">
-                <div class="status-dot ${m.status}"></div>
-            </div>
-            <span style="font-size:14px; font-weight:600;">${escapeHtml(m.username)}</span>
-        `;
-        el.memberList.appendChild(div);
-    });
-}
+// --- SEND MESSAGE ---
 
 function sendMessage() {
     const text = el.msgInput.value.trim();
