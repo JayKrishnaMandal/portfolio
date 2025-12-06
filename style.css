@@ -235,6 +235,7 @@ body.dark-mode ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); }
 
 /* App UI */
 .app-container { display: none; width: 100%; height: 100%; background: var(--card-bg); position: relative; overflow: hidden; }
+.app-container.visible { display: flex; }
 .sidebar-header { height: 60px; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
 .room-icon-small { width: 36px; height: 36px; min-width: 36px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border); }
 .contact-list { flex: 1; padding: 10px; overflow-y: auto; }
