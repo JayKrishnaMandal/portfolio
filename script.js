@@ -728,8 +728,15 @@ function toggleDarkMode(forceState) {
 
 function setupEventListeners() {
     // Auth Tabs
-    if(el.tabLogin) {
+    console.log('Setting up event listeners...');
+    console.log('tabLogin element:', el.tabLogin);
+    console.log('tabRegister element:', el.tabRegister);
+    console.log('formLogin element:', el.formLogin);
+    console.log('formRegister element:', el.formRegister);
+    
+    if(el.tabLogin && el.tabRegister && el.formLogin && el.formRegister) {
         el.tabLogin.onclick = () => {
+            console.log('Login tab clicked');
             // Style the active tab
             el.tabLogin.classList.add('bg-white', 'text-text-main', 'shadow-sm');
             el.tabLogin.classList.remove('text-text-sub');
@@ -740,9 +747,9 @@ function setupEventListeners() {
             el.formLogin.classList.remove('hidden');
             el.formRegister.classList.add('hidden');
         };
-    }
-    if(el.tabRegister) {
+        
         el.tabRegister.onclick = () => {
+            console.log('Register tab clicked');
             // Style the active tab
             el.tabRegister.classList.add('bg-white', 'text-text-main', 'shadow-sm');
             el.tabRegister.classList.remove('text-text-sub');
@@ -753,6 +760,14 @@ function setupEventListeners() {
             el.formRegister.classList.remove('hidden');
             el.formLogin.classList.add('hidden');
         };
+        console.log('Tab event listeners attached successfully');
+    } else {
+        console.error('Missing tab elements:', {
+            tabLogin: !!el.tabLogin,
+            tabRegister: !!el.tabRegister,
+            formLogin: !!el.formLogin,
+            formRegister: !!el.formRegister
+        });
     }
 
     // Forms
