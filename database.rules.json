@@ -7,17 +7,20 @@
         ".write": "!data.exists() || !newData.exists()", 
         "messages": {
            "$msgId": {
-             // Validate message structure
              ".write": "newData.exists() && newData.hasChildren(['user', 'text', 'time'])",
              ".validate": "newData.child('text').isString() && newData.child('text').val().length < 1000"
            }
         },
         "members": {
+           ".indexOn": ["name"], // Required for uniqueness check
            "$uid": {
              ".write": true,
              ".validate": "newData.hasChildren(['name', 'status'])"
            }
-        }
+        },
+        // Allow updates to password/admin only if you are admin (this is client-side logic in our no-auth app, but we keep read open)
+        "password": { ".write": true },
+        "admin": { ".write": true } 
       }
     }
   }

@@ -1,6 +1,6 @@
 // firebase-config.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, set, push, onChildAdded, get, remove, child, onDisconnect, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getDatabase, ref, set, push, onChildAdded, get, remove, child, onDisconnect, onValue, update, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBI3BhzcivNFMUmrXf4_HvuuH6Q0ycLqUk",
@@ -20,4 +20,4 @@ try {
     console.error("Firebase Init Error", e);
 }
 
-export { db, ref, set, push, onChildAdded, get, remove, child, onDisconnect, onValue, update };
+export { db, ref, set, push, onChildAdded, get, remove, child, onDisconnect, onValue, update, query, orderByChild, equalTo };

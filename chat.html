@@ -84,6 +84,27 @@
         </div>
     </div>
 
+    <!-- ADMIN MODAL -->
+    <div class="modal-overlay" id="adminModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2>Room Settings</h2>
+                <button class="close-modal" id="btnCloseAdmin">&times;</button>
+            </div>
+            <div class="modal-body">
+                <label class="modal-label">Update Private Key</label>
+                <input type="text" class="modal-input" id="newRoomKey" placeholder="New Password">
+                <button class="modal-btn" id="btnUpdateKey" style="background: var(--primary);">Update Key</button>
+
+                <div class="divider"></div>
+
+                <label class="modal-label" style="color:#ff4444;">Danger Zone</label>
+                <p style="font-size:13px; color:var(--text-sub); margin-bottom:10px;">Deleting a room is permanent and cannot be undone.</p>
+                <button class="modal-btn" id="btnDeleteRoom" style="background: #ff4444;">Delete Room</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 2. MESSENGER APP UI -->
     <div class="app-container" id="app">
         
@@ -118,7 +139,10 @@
                         <div class="typing-indicator" id="typingIndicator"></div>
                     </div>
                 </div>
-                <!-- Right side -->
+                <div class="header-right">
+                    <!-- Settings Button (Hidden by default, shown for Admin) -->
+                    <i class="fa-solid fa-gear" id="btnSettings" style="font-size:20px; color:var(--text-sub); cursor:pointer; display:none;"></i>
+                </div>
             </header>
 
             <div class="messages-container" id="messages"></div>
