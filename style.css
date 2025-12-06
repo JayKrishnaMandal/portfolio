@@ -86,21 +86,6 @@ body.dark-mode ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); }
 
 /* Modal */
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(4px); padding: 15px; }
-.modal-card { background: var(--card-bg); width: 100%; max-width: 420px; border-radius: 8px; box-shadow: var(--shadow); display: flex; flex-direction: column; overflow: hidden; max-height: 90vh; }
-.modal-header { padding: 15px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-.modal-header h2 { font-size: 20px; color: var(--text-main); font-weight: 700; }
-.close-modal { background: none; border: none; font-size: 24px; color: var(--text-sub); cursor: pointer; }
-.modal-body { padding: 16px; overflow-y: auto; }
-.modal-label { display: block; text-align: left; font-size: 14px; font-weight: 600; color: var(--text-main); margin-bottom: 6px; }
-.modal-input { width: 100%; padding: 10px; background: var(--input-bg); border: 1px solid var(--border); border-radius: 5px; font-size: 15px; margin-bottom: 15px; color: var(--text-main); }
-
-/* APP LAYOUT */
-.app-container { display: none; width: 100%; height: 100%; background: var(--card-bg); position: relative; overflow: hidden; }
-.app-container.visible { display: flex; }
-
-/* SIDEBAR */
-.sidebar { width: 340px; border-right: 1px solid var(--border); display: flex; flex-direction: column; background: var(--card-bg); height: 100%; z-index: 100; transition: transform 0.3s ease; }
-.sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 90; display: none; }
 
 .sidebar-header { height: 60px; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
 .room-icon-small { width: 36px; height: 36px; min-width: 36px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border); }
@@ -111,21 +96,6 @@ body.dark-mode #btnLogout { background: #3a3b3c; color: #e4e6eb; }
 #btnDarkMode { background: none; border: none; font-size: 20px; color: var(--text-main); cursor: pointer; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
 #btnDarkMode:hover { background: var(--hover); }
 
-/* Member List */
-.member-item { display: flex; align-items: center; padding: 10px; border-radius: 8px; cursor: pointer; transition: 0.2s; }
-.member-item:hover { background: var(--hover); }
-.member-avatar-wrapper { position: relative; margin-right: 12px; }
-.member-avatar { width: 40px; height: 40px; min-width: 40px; border-radius: 50%; object-fit: cover; background: #ddd; }
-.status-dot { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--card-bg); position: absolute; bottom: 0; right: 0; }
-.status-dot.online { background: #31a24c; } .status-dot.offline { background: #b0b3b8; }
-
-/* CHAT AREA */
-.chat-area { flex: 1; display: flex; flex-direction: column; background: var(--card-bg); position: relative; width: 100%; }
-.chat-header { height: 60px; border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 15px; justify-content: space-between; box-shadow: 0 1px 2px rgba(0,0,0,0.05); z-index: 10; background: var(--card-bg); color: var(--text-main); }
-.header-left { display: flex; align-items: center; gap: 10px; }
-.mobile-menu-btn { display: none; font-size: 22px; cursor: pointer; color: var(--primary); padding: 5px; margin-left: -5px; }
-.room-name { font-weight: 700; font-size: 17px; }
-.typing-indicator { font-size: 13px; color: var(--primary); height: 16px; opacity: 0; transition: opacity 0.3s; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
 
 /* MESSAGES */
 .messages-container { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; scroll-behavior: smooth; background: var(--bg); }

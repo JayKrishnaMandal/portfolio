@@ -363,12 +363,14 @@ function setupListeners(roomId) {
     onValue(ref(db, `rooms/${roomId}/members`), snap => renderMembers(snap.val()));
 }
 
+// Make kickMember global for inline onclick
 window.kickMember = async function(targetUid, targetName) {
-    if(!confirm(`Kick ${targetName}?`)) return;
+    if(!confirm(`Are you sure you want to kick ${targetName}?\nThis will ban them from the room.`)) return;
     try {
         await set(ref(db, `rooms/${state.room.id}/banned/${targetUid}`), true);
         await remove(ref(db, `rooms/${state.room.id}/members/${targetUid}`));
-    } catch(e) { console.error(e); }
+        alert(`${targetName} has been kicked.`);
+    } catch(e) { console.error(e); alert("Error kicking member."); }
 };
 
 function renderMembers(members) {
@@ -386,7 +388,9 @@ function renderMembers(members) {
         div.className = 'member-item';
         const safeName = escapeHtml(data.name);
         const isMe = uid === state.user.id;
-        const kickBtn = (isAdmin && !isMe) ? `<i class="fa-solid fa-ban" style="color:#ff4444; margin-left:auto; padding:5px;" onclick="kickMember('${uid}', '${safeName}')"></i>` : '';
+        // Kick Button logic
+        const kickBtn = (isAdmin && !isMe) ? 
+            `<i class="fa-solid fa-ban kick-btn" title="Kick Member" onclick="kickMember('${uid}', '${safeName}')"></i>` : '';
 
         div.innerHTML = `
             <div class="member-avatar-wrapper">
