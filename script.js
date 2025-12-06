@@ -255,7 +255,8 @@ function openUserProfile() {
     document.getElementById('editUserAvatarImg').src = currentUser.avatar;
     document.getElementById('editUserPass').value = '';
     
-    el.userSettingsModal.style.display = 'flex';
+    el.userSettingsModal.classList.add('flex');
+    el.userSettingsModal.classList.remove('hidden');
 }
 
 async function saveUserProfile() {
@@ -300,9 +301,11 @@ async function saveUserProfile() {
             saveSession(currentUser, currentUser.autoLogout === true); // Update storage
             
             alert("Profile Updated!");
-            el.userSettingsModal.style.display = 'none';
+            el.userSettingsModal.classList.remove('flex');
+            el.userSettingsModal.classList.add('hidden');
         } else {
-            el.userSettingsModal.style.display = 'none';
+            el.userSettingsModal.classList.remove('flex');
+            el.userSettingsModal.classList.add('hidden');
         }
         
     } catch(e) {
@@ -322,7 +325,8 @@ async function openRoomSettings() {
         const meta = snap.val();
         document.getElementById('editRoomName').value = meta.name;
         document.getElementById('editRoomKey').value = meta.privateKey;
-        el.roomSettingsModal.style.display = 'flex';
+        el.roomSettingsModal.classList.add('flex');
+        el.roomSettingsModal.classList.remove('hidden');
     }
 }
 
@@ -348,7 +352,8 @@ async function saveRoomSettings() {
         el.headerRoomName.textContent = newName;
         
         alert("Room Updated!");
-        el.roomSettingsModal.style.display = 'none';
+        el.roomSettingsModal.classList.remove('flex');
+        el.roomSettingsModal.classList.add('hidden');
     } catch(e) {
         alert("Update failed: " + e.message);
     } finally {
@@ -401,7 +406,8 @@ async function createRoom() {
         if (!currentUser.joinedRooms) currentUser.joinedRooms = {};
         currentUser.joinedRooms[roomId] = true;
 
-        el.createModal.style.display = 'none';
+        el.createModal.classList.remove('flex');
+        el.createModal.classList.add('hidden');
         showScreen('dashboard');
 
     } catch (e) {
@@ -767,12 +773,12 @@ function setupEventListeners() {
     };
     
     document.getElementById('btnSaveUserProfile').onclick = saveUserProfile;
-    document.getElementById('btnCloseUserSettings').onclick = () => el.userSettingsModal.style.display = 'none';
+    document.getElementById('btnCloseUserSettings').onclick = () => { el.userSettingsModal.classList.remove('flex'); el.userSettingsModal.classList.add('hidden'); };
 
     // Room Settings (Chat) -- Replacing old Admin logic
     document.getElementById('btnSettings').onclick = openRoomSettings;
     document.getElementById('btnSaveRoomSettings').onclick = saveRoomSettings;
-    document.getElementById('btnCloseRoomSettings').onclick = () => el.roomSettingsModal.style.display = 'none';
+    document.getElementById('btnCloseRoomSettings').onclick = () => { el.roomSettingsModal.classList.remove('flex'); el.roomSettingsModal.classList.add('hidden'); };
 
     // ... (Keep existing Create Room logic below) ...
     // Create Room Logic
@@ -782,7 +788,8 @@ function setupEventListeners() {
     const createGrid = document.getElementById('createRoomAvatarGrid');
 
     btnOpenCreate.onclick = () => {
-        el.createModal.style.display = 'flex';
+        el.createModal.classList.add('flex');
+        el.createModal.classList.remove('hidden');
         
         // Reset Inputs
         document.getElementById('newRoomName').value = '';
@@ -831,8 +838,8 @@ function setupEventListeners() {
     };
 
     document.getElementById('btnConfirmCreate').onclick = createRoom;
-    document.getElementById('btnCloseCreate').onclick = () => el.createModal.style.display = 'none';
-    document.getElementById('btnCancelCreate').onclick = () => el.createModal.style.display = 'none';
+    document.getElementById('btnCloseCreate').onclick = () => { el.createModal.classList.remove('flex'); el.createModal.classList.add('hidden'); };
+    document.getElementById('btnCancelCreate').onclick = () => { el.createModal.classList.remove('flex'); el.createModal.classList.add('hidden'); };
     document.getElementById('btnDashJoin').onclick = joinRoomFromDash;
 
     // Chat
