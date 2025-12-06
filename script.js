@@ -1,444 +1,625 @@
-import { db, ref, set, push, onChildAdded, get, remove, child, onDisconnect, onValue, update, query, orderByChild, equalTo } from './firebase-config.js';
-
-// --- UTILS ---
-function generateId() { return Math.random().toString(36).substr(2,9); }
-function escapeHtml(text) {
-    if (!text) return "";
-    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-}
+import { db, ref, set, get, update, push, child, onValue, onChildAdded, onDisconnect, remove } from "./firebase-config.js";
+import { createPicker } from 'https://cdn.jsdelivr.net/npm/picmo@latest/dist/index.js';
 
 // --- STATE ---
-const state = {
-    user: { name: "", avatar: "", id: localStorage.getItem('chat_uid') || generateId() },
-    room: { id: "", name: "", avatar: "", adminUid: "" },
-    selectedLoginAvatar: "",
-    selectedCreateUserAvatar: "",
-    selectedCreateRoomAvatar: "",
-    isTyping: false,
-    inputTimeout: null,
-    darkMode: localStorage.getItem('darkMode') === 'true',
-    listening: false,
-    hasNotifPermission: false
+let currentUser = null; // { uid, username, avatar, autoLogout }
+let currentRoomId = null;
+let currentRoomName = null;
+let currentRoomKey = null; 
+let isDark = false;
+let typingTimeout = null;
+let replyTarget = null; // { id, name, text }
+
+// --- DOM ELEMENTS ---
+const el = {
+    authScreen: document.getElementById('authScreen'),
+    dashboardScreen: document.getElementById('dashboardScreen'),
+    app: document.getElementById('app'),
+    
+    // Auth Forms
+    tabLogin: document.getElementById('tabLogin'),
+    tabRegister: document.getElementById('tabRegister'),
+    formLogin: document.getElementById('formLogin'),
+    formRegister: document.getElementById('formRegister'),
+    regAvatarPreview: document.getElementById('regAvatarPreview'),
+    regAvatarInput: document.getElementById('regAvatarInput'),
+    
+    // Dashboard
+    dashUserAvatar: document.getElementById('dashUserAvatar'),
+    dashUserName: document.getElementById('dashUserName'),
+    roomsList: document.getElementById('roomsList'),
+    
+    // Chat UI
+    messages: document.getElementById('messages'),
+    msgInput: document.getElementById('msgInput'),
+    sidebar: document.getElementById('sidebar'),
+    sidebarOverlay: document.querySelector('.sidebar-overlay'),
+    memberList: document.getElementById('memberList'),
+    headerRoomName: document.getElementById('headerRoomName'),
+    
+    // Modals
+    createModal: document.getElementById('createModal'),
+    loading: document.getElementById('loadingOverlay')
 };
 
-if(!localStorage.getItem('chat_uid')) localStorage.setItem('chat_uid', state.user.id);
-
-// --- AVATARS ---
-const userSeeds = ["Felix", "Aneka", "Zack", "Molly", "Sam", "Bear", "Leo", "Bella", "Willow", "Max"];
-const roomSeeds = ["Shape", "Polygon", "Star", "Circle", "Square", "Diamond", "Triangle", "Hexagon"];
-const getUserAvatar = (seed) => `https://api.dicebear.com/7.x/open-peeps/svg?seed=${seed}&bg=e7f3ff`;
-const getRoomAvatar = (seed) => `https://api.dicebear.com/7.x/identicon/svg?seed=${seed}`;
-
-state.selectedLoginAvatar = getUserAvatar(userSeeds[0]);
-state.selectedCreateUserAvatar = getUserAvatar(userSeeds[0]);
-state.selectedCreateRoomAvatar = getRoomAvatar(roomSeeds[0]);
-
-// --- DOM ---
-const el = {};
-
-document.addEventListener('DOMContentLoaded', init);
-
+// --- INITIALIZATION ---
 function init() {
-    // Viewport Fix
-    const setHeight = () => {
-        const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-        document.documentElement.style.setProperty('--app-height', `${vh}px`);
-    };
-    if (window.visualViewport) {
-        window.visualViewport.addEventListener('resize', setHeight);
-        window.visualViewport.addEventListener('scroll', setHeight);
+    toggleDarkMode(localStorage.getItem('theme') === 'dark');
+    setupEventListeners();
+    
+    // Check Persistence
+    const savedUser = JSON.parse(localStorage.getItem('jkchat_user')); // Persistent
+    const sessionUser = JSON.parse(sessionStorage.getItem('jkchat_user')); // Session
+    
+    if (savedUser) {
+        loginUser(savedUser.uid, true);
+    } else if (sessionUser) {
+        loginUser(sessionUser.uid, false);
+    } else {
+        showScreen('auth');
     }
-    window.addEventListener('resize', setHeight);
-    setHeight(); 
-
-    // IDs
-    const ids = [
-        'loginScreen', 'createModal', 'app', 'adminModal',
-        'sidebar', 'messages', 'memberList', 'sidebarOverlay',
-        'joinUser', 'joinRoom', 'joinKey', 'createUser', 'createRoom', 'createKey', 'msgInput',
-        'btnLogin', 'btnOpenCreate', 'btnCloseModal', 'btnSignUp', 'btnSend', 'btnLogout', 
-        'btnMobileMenu', 'btnDarkMode', 'btnEmoji', 'btnSettings', 'btnCloseAdmin',
-        'btnUpdateKey', 'btnDeleteRoom', 'newRoomKey',
-        'headerRoomName', 'headerRoomIcon', 'sidebarRoomNameDisplay', 'sidebarRoomIcon', 
-        'typingIndicator', 'emojiPickerContainer', 'loadingOverlay', 'errorToast',
-        'loginAvatarGrid', 'createRoomAvatarGrid', 'createUserAvatarGrid',
-        'replyPreview', 'btnCloseReply', 'replyTarget', 'replyContent'
-    ];
-    ids.forEach(id => el[id] = document.getElementById(id));
-
-    if(el.loginAvatarGrid) renderUserGrid(el.loginAvatarGrid, 'login');
-    if(el.createUserAvatarGrid) renderUserGrid(el.createUserAvatarGrid, 'createUser');
-    if(el.createRoomAvatarGrid) renderRoomGrid(el.createRoomAvatarGrid);
-    if(state.darkMode) document.body.classList.add('dark-mode');
-
-    setupEvents();
-    checkSession();
 }
 
-async function checkSession() {
-    const session = JSON.parse(localStorage.getItem('chat_session'));
-    if(session && session.roomId && session.userName && session.roomKey) {
-        setLoading(true, "Resuming Session...");
+function showScreen(screen) {
+    if(el.authScreen) el.authScreen.style.display = 'none';
+    if(el.dashboardScreen) el.dashboardScreen.style.display = 'none';
+    if(el.app) el.app.classList.remove('visible');
+    
+    if (screen === 'auth' && el.authScreen) el.authScreen.style.display = 'flex';
+    if (screen === 'dashboard' && el.dashboardScreen) {
+        el.dashboardScreen.style.display = 'flex';
+        renderDashboard();
+    }
+    if (screen === 'chat' && el.app) el.app.classList.add('visible');
+}
+
+// --- AUTHENTICATION ---
+async function registerUser() {
+    const user = document.getElementById('regUsername').value.trim();
+    const pass = document.getElementById('regPassword').value.trim();
+    const file = el.regAvatarInput.files[0];
+    const feedback = document.getElementById('regFeedback');
+
+    if (user.length < 3 || pass.length < 6) return showError('Username > 3 chars, Password > 6 chars', feedback);
+    if (!file) return showError('Please upload a profile picture', feedback);
+
+    setLoading(true, 'Creating Profile...');
+    
+    try {
+        // 1. Compress Image
+        const avatarBase64 = await compressImage(file);
+        
+        // 2. Generate UID
+        const uid = push(child(ref(db), 'users')).key;
+        
+        const userData = {
+            uid: uid,
+            username: escapeHtml(user),
+            password: btoa(pass), // Basic encoding
+            avatar: avatarBase64,
+            joinedRooms: {}
+        };
+
+        // 3. Save to DB
+        await set(ref(db, `users/${uid}`), userData);
+        
+        // 4. Auto Login
+        currentUser = userData;
+        saveSession(userData, false); // Default to session only on reg
+        showScreen('dashboard');
+        
+    } catch (e) {
+        console.error(e);
+        showError('Registration failed: ' + e.message, feedback);
+    } finally {
+        setLoading(false);
+    }
+}
+
+async function loginUser(uidOrUsername, isPersistent) {
+    // If we have direct UID (from local storage)
+    if (arguments.length === 2 && typeof uidOrUsername === 'string' && uidOrUsername.length > 10) {
+        // Fetch by UID
         try {
-            const snap = await get(ref(db, `rooms/${session.roomId}`));
-            if(snap.exists() && snap.val().password === session.roomKey) {
-                state.user.name = session.userName;
-                state.user.avatar = session.userAvatar || state.selectedLoginAvatar;
-                enterApp(session.roomId, session.roomName, snap.val().avatar, snap.val().admin);
+            const snap = await get(ref(db, `users/${uidOrUsername}`));
+            if (snap.exists()) {
+                currentUser = snap.val();
+                showScreen('dashboard');
+                return;
             } else {
-                localStorage.removeItem('chat_session');
-                setLoading(false);
+                // Invalid UID in storage
+                localStorage.removeItem('jkchat_user');
+                sessionStorage.removeItem('jkchat_user');
+                showScreen('auth');
+                return;
             }
         } catch(e) {
-            localStorage.removeItem('chat_session');
-            setLoading(false);
+            console.error(e);
+            return;
         }
     }
-}
 
-// Global Reply State
-let replyState = null; 
+    // Manual Login Form
+    const username = document.getElementById('loginUsername').value.trim();
+    const password = document.getElementById('loginPassword').value.trim();
+    const autoLogout = document.getElementById('chkAutoLogout').checked;
+    const feedback = document.getElementById('loginFeedback');
 
-function setReply(name, text) {
-    replyState = { name, text };
-    if(!el.replyPreview) return;
-    el.replyTarget.textContent = name;
-    el.replyContent.textContent = text;
-    el.replyPreview.style.display = 'flex';
-    el.msgInput.focus();
-}
+    if (!username || !password) return showError('Missing credentials', feedback);
 
-function closeReply() {
-    replyState = null;
-    if(el.replyPreview) el.replyPreview.style.display = 'none';
-}
+    setLoading(true, 'Verifying...');
 
-function setupEvents() {
-    if(el.btnOpenCreate) el.btnOpenCreate.addEventListener('click', () => el.createModal.style.display = 'flex');
-    if(el.btnCloseModal) el.btnCloseModal.addEventListener('click', () => el.createModal.style.display = 'none');
-    if(el.btnLogin) el.btnLogin.addEventListener('click', attemptJoin);
-    if(el.btnSignUp) el.btnSignUp.addEventListener('click', attemptCreate);
-    if(el.btnSend) el.btnSend.addEventListener('click', sendMessage);
-    if(el.btnLogout) el.btnLogout.addEventListener('click', logout);
-    if(el.btnCloseReply) el.btnCloseReply.addEventListener('click', closeReply);
-    
-    if(el.msgInput) {
-        el.msgInput.addEventListener('input', (e) => { 
-            handleTyping();
-        });
-        el.msgInput.addEventListener('keydown', (e) => {
-            if(e.key === 'Enter') sendMessage(); 
-        });
-    }
-
-    const toggleSidebar = () => {
-        el.sidebar.classList.toggle('active');
-        if(el.sidebarOverlay) el.sidebarOverlay.style.display = el.sidebar.classList.contains('active') ? 'block' : 'none';
-        if(el.emojiPickerContainer) el.emojiPickerContainer.style.display = 'none';
-    };
-
-    if(el.btnMobileMenu) el.btnMobileMenu.addEventListener('click', toggleSidebar);
-    if(el.sidebarOverlay) el.sidebarOverlay.addEventListener('click', toggleSidebar);
-    
-    if(el.btnDarkMode) {
-        el.btnDarkMode.addEventListener('click', () => {
-            state.darkMode = !state.darkMode;
-            document.body.classList.toggle('dark-mode', state.darkMode);
-            localStorage.setItem('darkMode', state.darkMode);
-        });
-    }
-
-    // Admin Events
-    if(el.btnSettings) el.btnSettings.addEventListener('click', () => el.adminModal.style.display = 'flex');
-    if(el.btnCloseAdmin) el.btnCloseAdmin.addEventListener('click', () => el.adminModal.style.display = 'none');
-    
-    if(el.btnUpdateKey) el.btnUpdateKey.addEventListener('click', async () => {
-        const newKey = el.newRoomKey.value.trim();
-        if(!newKey) return showError("Key cannot be empty");
-        if(confirm("Change room password?")) {
-            await update(ref(db, `rooms/${state.room.id}`), { password: newKey });
-            showError("Password Updated!");
-            el.adminModal.style.display = 'none';
-        }
-    });
-
-    if(el.btnDeleteRoom) el.btnDeleteRoom.addEventListener('click', async () => {
-        if(confirm("DELETE ROOM? This is permanent!")) {
-            await remove(ref(db, `rooms/${state.room.id}`));
-            alert("Room Deleted.");
-            logout();
-        }
-    });
-
-    // Emoji Picker
-    let picker;
-    if(el.btnEmoji) {
-        el.btnEmoji.addEventListener('click', (e) => {
-            e.stopPropagation();
-            if(!picker && el.emojiPickerContainer) {
-                picker = picmo.createPicker({ rootElement: el.emojiPickerContainer, itemsPerRow: 8, showRecents: false });
-    else alert(msg);
-}
-
-// --- AVATAR ---
-function renderUserGrid(c, ctx) {
-    c.innerHTML = '';
-    userSeeds.forEach((s, i) => {
-        const u = getUserAvatar(s);
-        const img = document.createElement('img'); img.src = u; img.className = 'avatar-option';
-        if(i===0) img.classList.add('selected');
-        img.onclick = () => {
-            c.querySelectorAll('.avatar-option').forEach(a=>a.classList.remove('selected'));
-            img.classList.add('selected');
-            if(ctx==='login') state.selectedLoginAvatar = u; else state.selectedCreateUserAvatar = u;
-        };
-        c.appendChild(img);
-    });
-}
-function renderRoomGrid(c) {
-    c.innerHTML = '';
-    roomSeeds.forEach((s, i) => {
-        const u = getRoomAvatar(s);
-        const img = document.createElement('img'); img.src = u; img.className = 'avatar-option';
-        if(i===0) img.classList.add('selected');
-        img.onclick = () => {
-            c.querySelectorAll('.avatar-option').forEach(a=>a.classList.remove('selected'));
-            img.classList.add('selected');
-            state.selectedCreateRoomAvatar = u;
-        };
-        c.appendChild(img);
-    });
-}
-
-// --- CORE ---
-
-async function checkUniqueName(roomId, name) {
-    const q = query(ref(db, `rooms/${roomId}/members`), orderByChild('name'), equalTo(name));
-    const snap = await get(q);
-    return snap.exists(); 
-}
-
-async function attemptCreate() {
-    const user = el.createUser.value.trim();
-    const roomName = el.createRoom.value.trim();
-    const key = el.createKey.value.trim();
-    if(!user || !roomName || !key) return showError("Fill all fields");
-
-    setLoading(true, "Creating...");
-    const roomId = sanitizeRoom(roomName);
-    const roomRef = ref(db, `rooms/${roomId}`);
-    
     try {
-        const snap = await get(roomRef);
-        if(snap.exists()) { setLoading(false); return showError("Room Name Taken!"); }
+        const snap = await get(ref(db, 'users'));
+        let foundUser = null;
+        
+        if (snap.exists()) {
+            snap.forEach(child => {
+                const u = child.val();
+                if (u.username === username && u.password === btoa(password)) {
+                    foundUser = u;
+                }
+            });
+        }
 
-        await set(roomRef, { 
-            password: key, admin: state.user.id, adminName: user,
-            avatar: state.selectedCreateRoomAvatar, createdAt: Date.now()
+        if (foundUser) {
+            currentUser = foundUser;
+            currentUser.autoLogout = autoLogout;
+            update(ref(db, `users/${foundUser.uid}`), { autoLogout });
+            saveSession(foundUser, !autoLogout);
+            showScreen('dashboard');
+        } else {
+            showError('Invalid username or password', feedback);
+        }
+    } catch (e) {
+        console.error(e);
+        showError('Login Error: ' + e.message, feedback);
+    } finally {
+        setLoading(false);
+    }
+}
+
+function saveSession(user, persistent) {
+    const data = JSON.stringify({ uid: user.uid });
+    if (persistent) {
+        localStorage.setItem('jkchat_user', data);
+        sessionStorage.removeItem('jkchat_user');
+    } else {
+        sessionStorage.setItem('jkchat_user', data);
+        localStorage.removeItem('jkchat_user');
+    }
+}
+
+function logout() {
+    if(currentUser && currentRoomId) {
+        // Remove presence
+        remove(ref(db, `rooms/${currentRoomId}/members/${currentUser.uid}`));
+    }
+    currentUser = null;
+    localStorage.removeItem('jkchat_user');
+    sessionStorage.removeItem('jkchat_user');
+    location.reload();
+}
+
+// --- DASHBOARD LOGIC ---
+function renderDashboard() {
+    if (!currentUser) return;
+    
+    el.dashUserAvatar.src = currentUser.avatar;
+    el.dashUserName.textContent = currentUser.username;
+    el.roomsList.innerHTML = '';
+
+    const rooms = currentUser.joinedRooms || {};
+    const roomIds = Object.keys(rooms);
+
+    if (roomIds.length === 0) {
+        el.roomsList.innerHTML = `<div class="empty-state"><i class="fa-regular fa-comments"></i><p>No rooms found. Create or Join one!</p></div>`;
+    }
+
+    roomIds.forEach(async (rid) => {
+        // Fetch generic room details
+        const rSnap = await get(ref(db, `rooms/${rid}/meta`));
+        if (rSnap.exists()) {
+            const meta = rSnap.val();
+            const card = document.createElement('div');
+            card.className = 'room-card';
+            card.innerHTML = `
+                <img src="${meta.icon}" class="room-card-icon">
+                <div class="room-card-info">
+                    <h4>${escapeHtml(meta.name)}</h4>
+                    <p>Tap to enter</p>
+                </div>
+            `;
+            card.onclick = () => enterRoom(rid, meta);
+            el.roomsList.appendChild(card);
+        } else {
+            // Room deleted?
+            // Optional: Cleanup user's joinedRooms?
+        }
+    });
+}
+
+// --- ROOM LOGIC ---
+async function createRoom() {
+    const name = document.getElementById('newRoomName').value.trim();
+    const key = document.getElementById('newRoomKey').value.trim();
+    const selectedIcon = document.querySelector('.small-grid .selected')?.src || `https://api.dicebear.com/7.x/shapes/svg?seed=${Date.now()}`;
+
+    if (!name || !key) return alert('Please fill all fields');
+    if (!currentUser) return;
+
+    setLoading(true, 'Creating Room...');
+
+    try {
+        const newRoomRef = push(child(ref(db), 'rooms'));
+        const roomId = newRoomRef.key;
+
+        const roomData = {
+            meta: {
+                name: escapeHtml(name),
+                privateKey: key, 
+                adminUid: currentUser.uid,
+                adminName: currentUser.username,
+                icon: selectedIcon,
+                createdAt: Date.now()
+            },
+            members: {}
+        };
+
+        // 1. Create Room
+        await set(newRoomRef, roomData);
+
+        // 2. Link to User
+        await update(ref(db, `users/${currentUser.uid}/joinedRooms`), {
+            [roomId]: true
         });
         
+        // 3. Update Local User State
+        if (!currentUser.joinedRooms) currentUser.joinedRooms = {};
+        currentUser.joinedRooms[roomId] = true;
+
         el.createModal.style.display = 'none';
-        state.user.name = user;
-        state.user.avatar = state.selectedCreateUserAvatar;
-        
-        saveSession(roomId, roomName, key, user, state.selectedCreateUserAvatar);
-        enterApp(roomId, roomName, state.selectedCreateRoomAvatar, state.user.id);
-    } catch(e) { console.error(e); setLoading(false); showError("Error creating room."); }
-}
+        showScreen('dashboard');
 
-async function attemptJoin() {
-    const user = el.joinUser.value.trim();
-    const roomName = el.joinRoom.value.trim();
-    const key = el.joinKey.value.trim();
-    if(!user || !roomName || !key) return showError("Fill all fields");
-
-    setLoading(true, "Joining...");
-    const roomId = sanitizeRoom(roomName);
-    try {
-        const snap = await get(ref(db, `rooms/${roomId}`));
-        if(!snap.exists()) { setLoading(false); return showError("Room not found"); }
-        
-        const data = snap.val();
-        if(data.password !== key) { setLoading(false); return showError("Wrong Password"); }
-
-        const isTaken = await checkUniqueName(roomId, user);
-        if(isTaken) {
-             const myRef = await get(ref(db, `rooms/${roomId}/members/${state.user.id}`));
-             if(myRef.exists() && myRef.val().name === user) { /* Re-join logic matches */ } 
-             else { setLoading(false); return showError(`Username '${user}' is taken.`); }
-        }
-
-        state.user.name = user;
-        state.user.avatar = state.selectedLoginAvatar;
-        saveSession(roomId, roomName, key, user, state.selectedLoginAvatar);
-        enterApp(roomId, roomName, data.avatar || getRoomAvatar('default'), data.admin); 
-    } catch(e) { 
-        console.error("JOIN ERROR:", e); 
-        setLoading(false); 
-        showError("Error: " + e.message); 
+    } catch (e) {
+        alert(e.message);
+    } finally {
+        setLoading(false);
     }
 }
 
-function saveSession(roomId, roomName, roomKey, userName, userAvatar) {
-    localStorage.setItem('chat_session', JSON.stringify({ roomId, roomName, roomKey, userName, userAvatar }));
+async function joinRoomFromDash() {
+    const name = document.getElementById('dashJoinName').value.trim();
+    const key = document.getElementById('dashJoinKey').value.trim();
+
+    if (!name || !key) return;
+    setLoading(true, 'Finding Room...');
+
+    try {
+        const snap = await get(ref(db, 'rooms'));
+        let targetId = null;
+
+        if(snap.exists()) {
+            snap.forEach(child => {
+                const r = child.val();
+                if (r.meta && r.meta.name === name && r.meta.privateKey === key) {
+                    targetId = child.key;
+                }
+            });
+        }
+
+        if (targetId) {
+            await update(ref(db, `users/${currentUser.uid}/joinedRooms`), {
+                [targetId]: true
+            });
+            if (!currentUser.joinedRooms) currentUser.joinedRooms = {};
+            currentUser.joinedRooms[targetId] = true;
+            
+            showScreen('dashboard'); 
+        } else {
+            alert('Room not found or incorrect password');
+        }
+    } catch (e) {
+        console.error(e);
+        alert("Error joining room.");
+    } finally {
+        setLoading(false);
+    }
 }
 
-function enterApp(roomId, roomName, roomAvatar, adminUid) {
-    state.room.id = roomId;
-    state.room.name = roomName;
-    state.room.avatar = roomAvatar;
-    state.room.adminUid = adminUid;
+async function enterRoom(roomId, meta) {
+    setLoading(true, 'Entering...');
+    currentRoomId = roomId;
+    currentRoomName = meta.name;
+    currentRoomKey = meta.privateKey;
     
-    if(el.headerRoomName) el.headerRoomName.textContent = roomName;
-    if(el.headerRoomIcon) { el.headerRoomIcon.src = roomAvatar; el.headerRoomIcon.style.display = 'block'; }
-    if(el.sidebarRoomName) el.sidebarRoomName.textContent = roomName;
-    if(el.sidebarRoomIcon) el.sidebarRoomIcon.src = roomAvatar;
-
-    el.loginScreen.style.display = 'none';
-    el.app.classList.add('visible');
-
-    if(state.user.id === adminUid) { if(el.btnSettings) el.btnSettings.style.display = 'block'; }
-
-    onValue(ref(db, `rooms/${roomId}/banned/${state.user.id}`), s => {
-        if(s.exists()) { alert("You have been kicked."); logout(); }
-    });
-    onValue(ref(db, `rooms/${roomId}`), s => {
-        if(!s.exists()) { alert("Room deleted."); logout(); }
-    });
-
-    const myRef = ref(db, `rooms/${roomId}/members/${state.user.id}`);
-    set(myRef, { name: state.user.name, avatar: state.user.avatar, status: 'online', lastSeen: Date.now() });
+    // Update header
+    el.headerRoomName.textContent = currentRoomName;
+    document.getElementById('headerRoomIcon').src = meta.icon;
+    document.getElementById('headerRoomIcon').style.display = 'block';
     
-    // Typing Cleanup
-    onDisconnect(child(myRef, 'typing')).remove();
-    onDisconnect(myRef).update({ status: 'offline', lastSeen: Date.now() });
+    // Set Sidebar Info
+    document.getElementById('sidebarRoomNameDisplay').textContent = currentRoomName;
+    document.getElementById('sidebarRoomIcon').src = meta.icon;
 
-    setupListeners(roomId);
+    // Setup Listeners
+    setupRoomListeners(roomId);
+    
+    // Set Presence
+    setPresence(roomId);
+
+    showScreen('chat');
     setLoading(false);
 }
 
-function setupListeners(roomId) {
-    if(state.listening) return;
-    state.listening = true;
+// --- CHAT & PRESENCE ---
+function setupRoomListeners(roomId) {
+    // 1. Messages
+    const msgRef = child(ref(db), `rooms/${roomId}/messages`);
+    // Clear old listeners if any? (Simple app fallback: reload cleans up)
+    
+    // Clear UI
+    el.messages.innerHTML = '';
+    
+    onChildAdded(msgRef, (snap) => {
+        renderMessage(snap.val());
+        el.messages.scrollTop = el.messages.scrollHeight;
+    });
 
-    onChildAdded(ref(db, `rooms/${roomId}/messages`), snap => renderMessage(snap.val()));
-    onValue(ref(db, `rooms/${roomId}/members`), snap => renderMembers(snap.val()));
+    // 2. Members
+    const memRef = child(ref(db), `rooms/${roomId}/members`);
+    onValue(memRef, (snap) => {
+        renderMemberList(snap.val());
+    });
 }
 
-// Make kickMember global for inline onclick
-window.kickMember = async function(targetUid, targetName) {
-    if(!confirm(`Are you sure you want to kick ${targetName}?\nThis will ban them from the room.`)) return;
-    try {
-        await set(ref(db, `rooms/${state.room.id}/banned/${targetUid}`), true);
-        await remove(ref(db, `rooms/${state.room.id}/members/${targetUid}`));
-        alert(`${targetName} has been kicked.`);
-    } catch(e) { console.error(e); alert("Error kicking member."); }
-};
+function setPresence(roomId) {
+    const userRef = ref(db, `rooms/${roomId}/members/${currentUser.uid}`);
+    const presenceData = {
+        username: currentUser.username,
+        avatar: currentUser.avatar,
+        status: 'online',
+        lastSeen: Date.now()
+    };
+    
+    set(userRef, presenceData);
+    onDisconnect(userRef).remove(); // Auto remove
+}
 
-function renderMembers(members) {
-    if(!el.memberList) return;
+function renderMemberList(members) {
     el.memberList.innerHTML = '';
-    let typingUsers = [];
+    if (!members) return;
 
-    if(!members) return;
-    const isAdmin = (state.user.id === state.room.adminUid);
-
-    Object.entries(members).forEach(([uid, data]) => {
-        if(data.typing && uid !== state.user.id) typingUsers.push(escapeHtml(data.name));
-
+    Object.entries(members).forEach(([uid, m]) => {
         const div = document.createElement('div');
         div.className = 'member-item';
-        const safeName = escapeHtml(data.name);
-        const isMe = uid === state.user.id;
-        // Kick Button logic
-        const kickBtn = (isAdmin && !isMe) ? 
-            `<i class="fa-solid fa-ban kick-btn" title="Kick Member" onclick="kickMember('${uid}', '${safeName}')"></i>` : '';
-
         div.innerHTML = `
             <div class="member-avatar-wrapper">
-                <img src="${data.avatar}" class="member-avatar">
-                <div class="status-dot ${data.status}"></div>
+                <img src="${m.avatar}" class="member-avatar">
+                <div class="status-dot ${m.status}"></div>
             </div>
-            <span style="flex:1;">${safeName} ${isMe ? '(You)' : ''} ${uid === state.room.adminUid ? '👑' : ''}</span>
-            ${kickBtn}
+            <span style="font-size:14px; font-weight:600;">${escapeHtml(m.username)}</span>
         `;
         el.memberList.appendChild(div);
     });
-
-    if(el.typingIndicator) {
-        if(typingUsers.length > 0) {
-            el.typingIndicator.textContent = `${typingUsers.join(', ')} is typing...`;
-            el.typingIndicator.style.opacity = '1';
-        } else {
-            el.typingIndicator.style.opacity = '0';
-        }
-    }
-}
-
-function handleTyping() {
-    clearTimeout(state.inputTimeout);
-    
-    if(!state.isTyping) {
-        state.isTyping = true;
-        update(ref(db, `rooms/${state.room.id}/members/${state.user.id}`), { typing: true }).catch(()=>{});
-    }
-
-    state.inputTimeout = setTimeout(() => {
-        state.isTyping = false;
-        update(ref(db, `rooms/${state.room.id}/members/${state.user.id}`), { typing: false }).catch(()=>{});
-    }, 2000);
 }
 
 function sendMessage() {
     const text = el.msgInput.value.trim();
-    if(!text) return;
+    if (!text) return;
 
-    push(ref(db, `rooms/${state.room.id}/messages`), {
-        user: state.user.name,
-        avatar: state.user.avatar,
-        text: text,
-        time: Date.now(),
-        replyTo: replyState
-    });
+    const msgData = {
+        user: currentUser.username,
+        uid: currentUser.uid,
+        avatar: currentUser.avatar,
+        text: escapeHtml(text),
+        timestamp: Date.now(),
+        type: 'text'
+    };
 
+    if (replyTarget) {
+        msgData.replyTo = replyTarget;
+    }
+
+    push(child(ref(db), `rooms/${currentRoomId}/messages`), msgData);
     el.msgInput.value = '';
     closeReply();
-    handleTyping();
 }
 
 function renderMessage(msg) {
-    if(!msg || !msg.text) return;
-    const isMe = msg.user === state.user.name;
+    const isMe = msg.uid === currentUser.uid;
     const div = document.createElement('div');
     div.className = `message ${isMe ? 'sent' : 'received'}`;
     
-    // Reply
-    let replyHtml = '';
-    if(msg.replyTo) {
-        replyHtml = `
-        <div class="reply-quote">
-            <strong>${escapeHtml(msg.replyTo.name)}</strong>
-            ${escapeHtml(msg.replyTo.text)}
+    let content = '';
+
+    // Reply Block
+    if (msg.replyTo) {
+        content += `
+            <div class="reply-quote">
+                <strong>${escapeHtml(msg.replyTo.name)}</strong>
+                ${escapeHtml(msg.replyTo.text)}
+            </div>
+        `;
+    }
+
+    if (!isMe) {
+        content += `<div class="msg-meta">
+            <img class="msg-avatar" src="${msg.avatar}">
+            <span class="msg-name">${escapeHtml(msg.user)}</span>
         </div>`;
     }
 
-    const time = new Date(msg.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const time = new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
-    div.innerHTML = `
-        ${!isMe ? `<div class="msg-meta"><img src="${msg.avatar}" class="msg-avatar"><span class="msg-name">${escapeHtml(msg.user)}</span></div>` : ''}
-        ${replyHtml}
-        <div>${escapeHtml(msg.text)}</div>
-        <div class="msg-time">${time}</div>
+    content += `
+        ${msg.text}
+        <span class="msg-time">${time}</span>
     `;
-    
-    div.ondblclick = () => setReply(msg.user, msg.text);
+
+    div.innerHTML = content;
+    div.ondblclick = () => setReply({ id: msg.uid, name: msg.user, text: msg.text });
 
     el.messages.appendChild(div);
-    el.messages.scrollTop = el.messages.scrollHeight;
+}
 
-    if(!isMe && document.hidden) {
-        if (Notification.permission === 'granted') {
-            new Notification(`New message from ${msg.user}`, { body: msg.text, icon: msg.avatar });
-        }
+
+// --- UTILITIES ---
+function compressImage(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Resize to 100px width
+                const maxWidth = 150;
+                const scaleSize = maxWidth / img.width;
+                canvas.width = maxWidth;
+                canvas.height = img.height * scaleSize;
+
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                // Compress
+                resolve(canvas.toDataURL('image/jpeg', 0.7));
+            };
+            img.onerror = (e) => reject(e);
+        };
+        reader.onerror = (e) => reject(e);
+    });
+}
+
+function setLoading(active, text = 'Loading...') {
+    if(el.loading) {
+        el.loading.style.display = active ? 'flex' : 'none';
+        el.loading.querySelector('.loading-text').textContent = text;
     }
 }
+
+function showError(msg, container) {
+    if (container) {
+        container.textContent = msg;
+        setTimeout(() => container.textContent = '', 3000);
+    } else {
+        alert(msg);
+    }
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+function toggleDarkMode(forceState) {
+    isDark = typeof forceState === 'boolean' ? forceState : !isDark;
+    document.body.classList.toggle('dark-mode', isDark);
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    const btnIcon = document.querySelector('#btnDarkMode i');
+    if (btnIcon) btnIcon.className = isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+}
+
+function setupEventListeners() {
+    // Auth Tabs
+    if(el.tabLogin) {
+        el.tabLogin.onclick = () => {
+            el.tabLogin.classList.add('active'); el.tabRegister.classList.remove('active');
+            el.formLogin.style.display = 'block'; el.formRegister.style.display = 'none';
+        };
+    }
+    if(el.tabRegister) {
+        el.tabRegister.onclick = () => {
+            el.tabRegister.classList.add('active'); el.tabLogin.classList.remove('active');
+            el.formRegister.style.display = 'block'; el.formLogin.style.display = 'none';
+        };
+    }
+
+    // Forms
+    const btnReg = document.getElementById('btnSubmitRegister');
+    if(btnReg) btnReg.onclick = registerUser;
+
+    const btnLog = document.getElementById('btnSubmitLogin');
+    if(btnLog) btnLog.onclick = () => loginUser();
+
+    if(el.regAvatarPreview) el.regAvatarPreview.onclick = () => el.regAvatarInput.click();
+    if(el.regAvatarInput) el.regAvatarInput.onchange = async (e) => {
+        if (e.target.files[0]) {
+            const base64 = await compressImage(e.target.files[0]);
+            el.regAvatarPreview.innerHTML = `<img src="${base64}">`;
+        }
+    };
+
+    // Dashboard
+    document.getElementById('btnDashLogout').onclick = logout;
+    document.getElementById('btnOpenCreateRoom').onclick = () => {
+        el.createModal.style.display = 'flex';
+        // Init avatars for room creation
+        const grid = document.getElementById('createRoomAvatarGrid');
+        grid.innerHTML = '';
+        for (let i = 0; i < 8; i++) {
+            const seed = `room${i}`;
+            const img = document.createElement('img');
+            img.src = `https://api.dicebear.com/7.x/shapes/svg?seed=${seed}`;
+            img.className = 'avatar-option';
+            img.onclick = () => {
+                document.querySelectorAll('.avatar-option').forEach(a => a.classList.remove('selected'));
+                img.classList.add('selected');
+            };
+            grid.appendChild(img);
+        }
+    };
+    document.getElementById('btnConfirmCreate').onclick = createRoom;
+    document.getElementById('btnCloseCreate').onclick = () => el.createModal.style.display = 'none';
+    document.getElementById('btnDashJoin').onclick = joinRoomFromDash;
+
+    // Chat
+    document.getElementById('btnSend').onclick = sendMessage;
+    el.msgInput.onkeypress = (e) => { if(e.key === 'Enter') sendMessage(); };
+    document.getElementById('btnMobileMenu').onclick = () => {
+        el.sidebar.classList.add('active');
+        if(el.sidebarOverlay) el.sidebarOverlay.style.display = 'block';
+    };
+    if(el.sidebarOverlay) {
+        el.sidebarOverlay.onclick = () => {
+            el.sidebar.classList.remove('active');
+            el.sidebarOverlay.style.display = 'none';
+        };
+    }
+    document.getElementById('btnDarkMode').onclick = () => toggleDarkMode();
+    document.getElementById('btnCloseReply').onclick = closeReply;
+    
+    // Emoji Init (only if container exists)
+    const emojiContainer = document.getElementById('emojiPickerContainer');
+    if(emojiContainer) {
+        const picker = createPicker({ rootElement: emojiContainer });
+        picker.addEventListener('emoji:select', (selection) => {
+            el.msgInput.value += selection.emoji;
+            emojiContainer.style.display = 'none';
+        });
+        document.getElementById('btnEmoji').onclick = () => {
+            emojiContainer.style.display = emojiContainer.style.display === 'block' ? 'none' : 'block';
+        };
+    }
+}
+
+// Reply Helpers
+function setReply(target) {
+    replyTarget = target;
+    document.getElementById('replyTarget').textContent = target.name;
+    document.getElementById('replyContent').textContent = target.text;
+    document.getElementById('replyPreview').style.display = 'flex';
+    el.msgInput.focus();
+}
+function closeReply() {
+    replyTarget = null;
+    document.getElementById('replyPreview').style.display = 'none';
+}
+
+window.onload = init;
