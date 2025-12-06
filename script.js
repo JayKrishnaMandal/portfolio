@@ -108,8 +108,10 @@ function setupEvents() {
     if(el.btnLogout) el.btnLogout.addEventListener('click', logout);
     
     if(el.msgInput) {
-        el.msgInput.addEventListener('keypress', (e) => { 
+        el.msgInput.addEventListener('input', (e) => { 
             handleTyping();
+        });
+        el.msgInput.addEventListener('keydown', (e) => {
             if(e.key === 'Enter') sendMessage(); 
         });
     }
@@ -163,6 +165,7 @@ function setupEvents() {
                 picker.addEventListener('emoji:select', selection => {
                     el.msgInput.value += selection.emoji;
                     el.msgInput.focus();
+                    handleTyping(); // Trigger typing on emoji
                 });
             }
             if(el.emojiPickerContainer) {
@@ -390,10 +393,13 @@ function renderMembers(members) {
 }
 
 function handleTyping() {
-    if(state.isTyping) return;
-    state.isTyping = true;
-    update(ref(db, `rooms/${state.room.id}/members/${state.user.id}`), { typing: true }).catch(()=>{});
     clearTimeout(state.inputTimeout);
+    
+    if(!state.isTyping) {
+        state.isTyping = true;
+        update(ref(db, `rooms/${state.room.id}/members/${state.user.id}`), { typing: true }).catch(()=>{});
+    }
+
     state.inputTimeout = setTimeout(() => {
         state.isTyping = false;
         update(ref(db, `rooms/${state.room.id}/members/${state.user.id}`), { typing: false }).catch(()=>{});
