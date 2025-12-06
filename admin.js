@@ -1,121 +1,106 @@
 import { db, ref, set, get, remove, child } from './firebase-config.js';
 
-// Simple client-side protection (Obscurity, not true security without Auth rules)
-// In a real app, you'd use Firebase Auth Claims.
-const ACCESS_HASH = "admin123"; // Simple password for demo
+// --- AUTH LOGIC ---
+const SYSTEM_REF = ref(db, 'system/adminKey');
 
-window.login = function() {
-    const key = document.getElementById('adminKey').value;
-    if(key === ACCESS_HASH) {
-        document.getElementById('adminLogin').style.display = 'none';
-        document.getElementById('dashboard').style.display = 'block';
-        loadDashboard();
-    } else {
-        alert("Access Denied");
-    }
+window.initAdmin = async function() {
+    // 1. Check if key exists in DB, if not set default 'admin123'
+    try {
+        const snap = await get(SYSTEM_REF);
+        if(!snap.exists()) {
+            await set(SYSTEM_REF, 'admin123');
+            console.log("System initialized with default key.");
+        }
+    } catch(e) { console.error("Init check failed", e); }
 }
 
-async function loadDashboard() {
-    const list = document.getElementById('roomList');
-    list.innerHTML = '<div style="padding:20px;">Loading data...</div>';
+document.getElementById('btnLogin').addEventListener('click', async () => {
+    const input = document.getElementById('adminKey').value;
+    const btn = document.getElementById('btnLogin');
+    
+    btn.innerText = "Verifying...";
+    try {
+        const snap = await get(SYSTEM_REF);
+        const realKey = snap.val();
+        
+        if(input === realKey) {
+            document.getElementById('loginOverlay').style.display = 'none';
+            loadData();
+        } else {
+            alert("Access Denied: Invalid Key");
+        }
+    } catch(e) {
+        alert("Connection Error");
+        console.error(e);
+    }
+    btn.innerText = "Unlock Dashboard";
+});
 
+// --- DATA ---
+async function loadData() {
+    const listRecent = document.getElementById('recentList');
+    const listFull = document.getElementById('roomListFull');
+    
     try {
         const snap = await get(ref(db, 'rooms'));
-        if(!snap.exists()) {
-            list.innerHTML = '<div style="padding:20px;">No rooms active.</div>';
-            updateStats(0,0,0);
-            return;
-        }
-
-        const rooms = snap.val();
-        let roomCount = 0, msgCount = 0, userCount = 0;
-        list.innerHTML = '';
-
+        const rooms = snap.exists() ? snap.val() : {};
+        
+        // 1. Calculate Stats
+        const roomCount = Object.keys(rooms).length;
+        let msgCount = 0;
+        let userCount = 0;
+        
+        // 2. Render Lists
+        let html = '';
         Object.entries(rooms).forEach(([id, data]) => {
-            roomCount++;
-            const msgs = data.messages ? Object.keys(data.messages).length : 0;
-            const members = data.members ? Object.keys(data.members).length : 0;
-            msgCount += msgs;
-            userCount += members;
-
-            const date = data.createdAt ? new Date(data.createdAt).toLocaleDateString() : 'Unknown';
-
-            const div = document.createElement('div');
-            div.className = 'room-item';
-            div.innerHTML = `
-                <div class="room-info">
-                    <strong>${id}</strong>
-                    <div class="room-meta">
-                        Created: ${date} • Admin: ${data.adminName || 'Unknown'} <br>
-                        ${members} Members • ${msgs} Messages
+            const mC = data.messages ? Object.keys(data.messages).length : 0;
+            const uC = data.members ? Object.keys(data.members).length : 0;
+            msgCount += mC;
+            userCount += uC;
+            
+            html += `
+                <div class="room-row">
+                    <div class="room-info">
+                        <h4>${id}</h4>
+                        <p>Users: ${uC} | Msgs: ${mC} | Admin: ${data.adminName || '?'}</p>
+                    </div>
+                    <div class="actions">
+                        <button class="btn-delete" onclick="window.nukeRoom('${id}')"><i class="fa-solid fa-trash"></i></button>
                     </div>
                 </div>
-                <div class="actions">
-                    <button class="btn-view" onclick="viewRoom('${id}')">Manage</button>
-                    <button class="btn-delete" onclick="deleteRoom('${id}')"><i class="fa-solid fa-trash"></i></button>
-                </div>
             `;
-            list.appendChild(div);
         });
-
-        updateStats(roomCount, msgCount, userCount);
         
-        // Expose viewRoom/deleteRoom to window scope
-        window.roomsData = rooms;
-
-    } catch(e) {
-        console.error(e);
-        list.innerHTML = `<div style="padding:20px; color:red;">Error loading data: ${e.message}</div>`;
-    }
+        listRecent.innerHTML = html || '<p style="text-align:center; padding:20px; color:#aaa;">No data found.</p>';
+        listFull.innerHTML = html || '<p style="text-align:center; padding:20px; color:#aaa;">No data found.</p>';
+        
+        document.getElementById('statRooms').innerText = roomCount;
+        document.getElementById('statMessages').innerText = msgCount;
+        document.getElementById('statUsers').innerText = userCount;
+        
+    } catch(e) { console.error(e); }
 }
 
-function updateStats(r, m, u) {
-    document.getElementById('statRooms').innerText = r;
-    document.getElementById('statMsgs').innerText = m;
-    document.getElementById('statUsers').innerText = u;
-}
-
-window.deleteRoom = async function(id) {
-    if(confirm(`Are you SURE you want to delete room: ${id}? This cannot be undone.`)) {
+window.nukeRoom = async function(id) {
+    if(confirm(`PERMANENTLY DELETE room '${id}'?`)) {
         await remove(ref(db, `rooms/${id}`));
-        loadDashboard();
+        loadData();
     }
 }
 
-window.viewRoom = function(id) {
-    const data = window.roomsData[id];
-    if(!data) return;
+window.refreshData = loadData;
 
-    document.getElementById('modalTitle').innerText = id;
-    const container = document.getElementById('modalMembers');
-    container.innerHTML = '';
-
-    const members = data.members || {};
-    if(Object.keys(members).length === 0) container.innerHTML = '<p>No active members.</p>';
-
-    Object.entries(members).forEach(([uid, m]) => {
-        const row = document.createElement('div');
-        row.className = 'member-row';
-        row.innerHTML = `
-            <span>
-                <img src="${m.avatar}" style="width:20px; height:20px; vertical-align:middle; border-radius:50%;">
-                ${m.name} ${uid === data.admin ? '👑' : ''}
-            </span>
-            <button class="btn-delete" onclick="kickUser('${id}', '${uid}')">Kick</button>
-        `;
-        container.appendChild(row);
-    });
-
-    document.getElementById('btnNukeRoom').onclick = () => { window.deleteRoom(id); document.getElementById('detailsModal').style.display='none'; };
-    document.getElementById('detailsModal').style.display = 'flex';
-}
-
-window.kickUser = async function(roomId, uid) {
-    if(confirm("Kick this user?")) {
-        await remove(ref(db, `rooms/${roomId}/members/${uid}`));
-        await set(ref(db, `rooms/${roomId}/banned/${uid}`), true);
-        alert("User kicked.");
-        document.getElementById('detailsModal').style.display='none';
-        loadDashboard();
+// --- SETTINGS ---
+document.getElementById('btnUpdateSecurity').addEventListener('click', async () => {
+    const newKey = document.getElementById('newAdminKey').value.trim();
+    if(!newKey || newKey.length < 4) return alert("Key must be 4+ chars");
+    
+    if(confirm("Change Super Admin Password?")) {
+        await set(SYSTEM_REF, newKey);
+        alert("Success! Please re-login.");
+        location.reload();
     }
-}
+});
+
+// Run Init
+window.initAdmin();
