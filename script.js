@@ -61,7 +61,8 @@ function init() {
         'btnUpdateKey', 'btnDeleteRoom', 'newRoomKey',
         'headerRoomName', 'headerRoomIcon', 'sidebarRoomNameDisplay', 'sidebarRoomIcon', 
         'typingIndicator', 'emojiPickerContainer', 'loadingOverlay', 'errorToast',
-        'loginAvatarGrid', 'createRoomAvatarGrid', 'createUserAvatarGrid'
+        'loginAvatarGrid', 'createRoomAvatarGrid', 'createUserAvatarGrid',
+        'replyPreview', 'btnCloseReply', 'replyTarget', 'replyContent'
     ];
     ids.forEach(id => el[id] = document.getElementById(id));
 
@@ -71,20 +72,16 @@ function init() {
     if(state.darkMode) document.body.classList.add('dark-mode');
 
     setupEvents();
-
-    // AUTO-LOGIN CHECK
     checkSession();
 }
 
 async function checkSession() {
     const session = JSON.parse(localStorage.getItem('chat_session'));
     if(session && session.roomId && session.userName && session.roomKey) {
-        // Validation check
         setLoading(true, "Resuming Session...");
         try {
             const snap = await get(ref(db, `rooms/${session.roomId}`));
             if(snap.exists() && snap.val().password === session.roomKey) {
-                // Valid session
                 state.user.name = session.userName;
                 state.user.avatar = session.userAvatar || state.selectedLoginAvatar;
                 enterApp(session.roomId, session.roomName, snap.val().avatar, snap.val().admin);
@@ -99,6 +96,23 @@ async function checkSession() {
     }
 }
 
+// Global Reply State
+let replyState = null; 
+
+function setReply(name, text) {
+    replyState = { name, text };
+    if(!el.replyPreview) return;
+    el.replyTarget.textContent = name;
+    el.replyContent.textContent = text;
+    el.replyPreview.style.display = 'flex';
+    el.msgInput.focus();
+}
+
+function closeReply() {
+    replyState = null;
+    if(el.replyPreview) el.replyPreview.style.display = 'none';
+}
+
 function setupEvents() {
     if(el.btnOpenCreate) el.btnOpenCreate.addEventListener('click', () => el.createModal.style.display = 'flex');
     if(el.btnCloseModal) el.btnCloseModal.addEventListener('click', () => el.createModal.style.display = 'none');
@@ -106,6 +120,7 @@ function setupEvents() {
     if(el.btnSignUp) el.btnSignUp.addEventListener('click', attemptCreate);
     if(el.btnSend) el.btnSend.addEventListener('click', sendMessage);
     if(el.btnLogout) el.btnLogout.addEventListener('click', logout);
+    if(el.btnCloseReply) el.btnCloseReply.addEventListener('click', closeReply);
     
     if(el.msgInput) {
         el.msgInput.addEventListener('input', (e) => { 
@@ -165,7 +180,7 @@ function setupEvents() {
                 picker.addEventListener('emoji:select', selection => {
                     el.msgInput.value += selection.emoji;
                     el.msgInput.focus();
-                    handleTyping(); // Trigger typing on emoji
+                    handleTyping();
                 });
             }
             if(el.emojiPickerContainer) {
@@ -331,8 +346,10 @@ function enterApp(roomId, roomName, roomAvatar, adminUid) {
 
     const myRef = ref(db, `rooms/${roomId}/members/${state.user.id}`);
     set(myRef, { name: state.user.name, avatar: state.user.avatar, status: 'online', lastSeen: Date.now() });
+    
     // Typing Cleanup
     onDisconnect(child(myRef, 'typing')).remove();
+    onDisconnect(myRef).update({ status: 'offline', lastSeen: Date.now() });
 
     setupListeners(roomId);
     setLoading(false);
@@ -401,18 +418,58 @@ function handleTyping() {
     }
 
     state.inputTimeout = setTimeout(() => {
+        state.isTyping = false;
+        update(ref(db, `rooms/${state.room.id}/members/${state.user.id}`), { typing: false }).catch(()=>{});
+    }, 2000);
+}
+
+function sendMessage() {
+    const text = el.msgInput.value.trim();
+    if(!text) return;
+
+    push(ref(db, `rooms/${state.room.id}/messages`), {
+        user: state.user.name,
+        avatar: state.user.avatar,
+        text: text,
+        time: Date.now(),
+        replyTo: replyState
+    });
+
+    el.msgInput.value = '';
+    closeReply();
+    handleTyping();
+}
+
+function renderMessage(msg) {
+    if(!msg || !msg.text) return;
+    const isMe = msg.user === state.user.name;
+    const div = document.createElement('div');
     div.className = `message ${isMe ? 'sent' : 'received'}`;
+    
+    // Reply
+    let replyHtml = '';
+    if(msg.replyTo) {
+        replyHtml = `
+        <div class="reply-quote">
+            <strong>${escapeHtml(msg.replyTo.name)}</strong>
+            ${escapeHtml(msg.replyTo.text)}
+        </div>`;
+    }
+
     const time = new Date(msg.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     div.innerHTML = `
         ${!isMe ? `<div class="msg-meta"><img src="${msg.avatar}" class="msg-avatar"><span class="msg-name">${escapeHtml(msg.user)}</span></div>` : ''}
+        ${replyHtml}
         <div>${escapeHtml(msg.text)}</div>
         <div class="msg-time">${time}</div>
     `;
+    
+    div.ondblclick = () => setReply(msg.user, msg.text);
+
     el.messages.appendChild(div);
     el.messages.scrollTop = el.messages.scrollHeight;
 
-    // NOTIFICATION
     if(!isMe && document.hidden) {
         if (Notification.permission === 'granted') {
             new Notification(`New message from ${msg.user}`, { body: msg.text, icon: msg.avatar });
