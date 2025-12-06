@@ -328,7 +328,8 @@ function enterApp(roomId, roomName, roomAvatar, adminUid) {
 
     const myRef = ref(db, `rooms/${roomId}/members/${state.user.id}`);
     set(myRef, { name: state.user.name, avatar: state.user.avatar, status: 'online', lastSeen: Date.now() });
-    onDisconnect(myRef).update({ status: 'offline', lastSeen: Date.now() });
+    // Typing Cleanup
+    onDisconnect(child(myRef, 'typing')).remove();
 
     setupListeners(roomId);
     setLoading(false);
@@ -379,8 +380,12 @@ function renderMembers(members) {
     });
 
     if(el.typingIndicator) {
-        if(typingUsers.length > 0) el.typingIndicator.textContent = `${typingUsers.join(', ')} is typing...`;
-        else el.typingIndicator.textContent = '';
+        if(typingUsers.length > 0) {
+            el.typingIndicator.textContent = `${typingUsers.join(', ')} is typing...`;
+            el.typingIndicator.style.opacity = '1';
+        } else {
+            el.typingIndicator.style.opacity = '0';
+        }
     }
 }
 
