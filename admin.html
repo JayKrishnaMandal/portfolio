@@ -71,7 +71,7 @@
 </head>
 <body>
 
-    <!-- AUTH SCREEN -->
+<!-- AUTH SCREEN -->
     <div id="loginOverlay">
         <div class="login-card">
             <h2>Admin Portal</h2>
@@ -94,10 +94,13 @@
                 <i class="fa-solid fa-chart-pie"></i> Dashboard
             </div>
             <div class="nav-item" onclick="switchTab('rooms')">
-                <i class="fa-solid fa-layer-group"></i> Room Manager
+                <i class="fa-solid fa-layer-group"></i> Rooms
+            </div>
+            <div class="nav-item" onclick="switchTab('users')">
+                <i class="fa-solid fa-users"></i> Users
             </div>
             <div class="nav-item" onclick="switchTab('settings')">
-                <i class="fa-solid fa-sliders"></i> System Settings
+                <i class="fa-solid fa-sliders"></i> Settings
             </div>
         </nav>
         <div style="margin-top:auto">
@@ -138,7 +141,7 @@
                     <button class="btn-primary" style="width:auto; padding:10px 20px;" onclick="refreshData()">Refresh</button>
                 </div>
                 <div id="recentList">
-                    <!-- Injected -->
+                    <p style="color:var(--text-sub); text-align:center;">Loading...</p>
                 </div>
             </div>
         </div>
@@ -148,11 +151,18 @@
              <div class="card-container">
                 <div class="card-header">
                     <span class="card-title">All Rooms</span>
-                    <input type="text" placeholder="Search rooms..." style="width:200px; padding:10px;">
                 </div>
-                <div id="roomListFull">
-                    <!-- Injected -->
+                <div id="roomListFull"></div>
+            </div>
+        </div>
+
+        <!-- TAB: USERS -->
+        <div id="view-users" class="tab-view">
+             <div class="card-container">
+                <div class="card-header">
+                    <span class="card-title">Registered Users</span>
                 </div>
+                <div id="userListFull"></div>
             </div>
         </div>
 
@@ -177,10 +187,16 @@
         window.switchTab = (tab) => {
             document.querySelectorAll('.tab-view').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            document.getElementById(`view-${tab}`).classList.add('active');
-            event.currentTarget.classList.add('active');
+            // Find nav item by text content approx or index
+            const navs = document.querySelectorAll('.nav-item');
+            if(tab === 'dashboard') navs[0].classList.add('active');
+            if(tab === 'rooms') navs[1].classList.add('active');
+            if(tab === 'users') navs[2].classList.add('active');
+            if(tab === 'settings') navs[3].classList.add('active');
             
-            const titles = { 'dashboard': 'Main Dashboard', 'rooms': 'Room Manager', 'settings': 'System Settings' };
+            document.getElementById(`view-${tab}`).classList.add('active');
+            
+            const titles = { 'dashboard': 'Main Dashboard', 'rooms': 'Room Manager', 'users': 'User Manager', 'settings': 'System Settings' };
             document.getElementById('headerTitle').innerText = titles[tab];
             document.getElementById('breadCrumb').innerText = titles[tab].split(' ')[0];
         };
