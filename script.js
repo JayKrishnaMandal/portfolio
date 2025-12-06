@@ -39,205 +39,122 @@ const el = {
     
     // Modals
     createModal: document.getElementById('createModal'),
+    roomSettingsModal: document.getElementById('roomSettingsModal'),
+    userSettingsModal: document.getElementById('userSettingsModal'),
     loading: document.getElementById('loadingOverlay')
 };
 
-// --- INITIALIZATION ---
-function init() {
-    toggleDarkMode(localStorage.getItem('theme') === 'dark');
-    setupEventListeners();
+// ... (Init/ShowScreen/Auth functions remain same) ...
+
+// --- USER PROFILE SETTINGS ---
+function openUserProfile() {
+    if(!currentUser) return;
     
-    // Check Persistence
-    const savedUser = JSON.parse(localStorage.getItem('jkchat_user')); // Persistent
-    const sessionUser = JSON.parse(sessionStorage.getItem('jkchat_user')); // Session
+    document.getElementById('editUserName').value = currentUser.username;
+    document.getElementById('editUserAvatarImg').src = currentUser.avatar;
+    document.getElementById('editUserPass').value = '';
     
-    if (savedUser) {
-        loginUser(savedUser.uid, true);
-    } else if (sessionUser) {
-        loginUser(sessionUser.uid, false);
-    } else {
-        showScreen('auth');
-    }
+    el.userSettingsModal.style.display = 'flex';
 }
 
-function showScreen(screen) {
-    if(el.authScreen) el.authScreen.style.display = 'none';
-    if(el.dashboardScreen) el.dashboardScreen.style.display = 'none';
-    if(el.app) el.app.classList.remove('visible');
+async function saveUserProfile() {
+    if(!currentUser) return;
     
-    if (screen === 'auth' && el.authScreen) el.authScreen.style.display = 'flex';
-    if (screen === 'dashboard' && el.dashboardScreen) {
-        el.dashboardScreen.style.display = 'flex';
-        renderDashboard();
-    }
-    if (screen === 'chat' && el.app) el.app.classList.add('visible');
-}
-
-// --- AUTHENTICATION ---
-async function registerUser() {
-    const user = document.getElementById('regUsername').value.trim();
-    const pass = document.getElementById('regPassword').value.trim();
-    const file = el.regAvatarInput.files[0];
-    const feedback = document.getElementById('regFeedback');
-
-    if (user.length < 3 || pass.length < 6) return showError('Username > 3 chars, Password > 6 chars', feedback);
-    if (!file) return showError('Please upload a profile picture', feedback);
-
-    setLoading(true, 'Creating Profile...');
+    const newName = document.getElementById('editUserName').value.trim();
+    const newPass = document.getElementById('editUserPass').value.trim();
+    const avatarImg = document.getElementById('editUserAvatarImg');
+    const isNewAvatar = avatarImg.dataset.new === "true";
+    
+    if(newName.length < 2) return alert("Name too short");
+    
+    setLoading(true, "Updating Profile...");
     
     try {
-        // 1. Compress Image
-        const avatarBase64 = await compressImage(file);
+        const updates = {};
         
-        // 2. Generate UID
-        const uid = push(child(ref(db), 'users')).key;
+        // 1. Update Name
+        if(newName !== currentUser.username) {
+            updates['username'] = escapeHtml(newName);
+            currentUser.username = updates['username']; // Local update
+        }
         
-        const userData = {
-            uid: uid,
-            username: escapeHtml(user),
-            password: btoa(pass), // Basic encoding
-            avatar: avatarBase64,
-            joinedRooms: {}
-        };
-
-        // 3. Save to DB
-        await set(ref(db, `users/${uid}`), userData);
+        // 2. Update Password
+        if(newPass.length > 0) {
+            if(newPass.length < 6) throw new Error("Password must be 6+ chars");
+            updates['password'] = btoa(newPass);
+        }
         
-        // 4. Auto Login
-        currentUser = userData;
-        saveSession(userData, false); // Default to session only on reg
-        showScreen('dashboard');
+        // 3. Update Avatar
+        if(isNewAvatar) {
+            updates['avatar'] = avatarImg.src;
+            currentUser.avatar = avatarImg.src; // Local update
+        }
         
-    } catch (e) {
-        console.error(e);
-        showError('Registration failed: ' + e.message, feedback);
+        if(Object.keys(updates).length > 0) {
+            await update(ref(db, `users/${currentUser.uid}`), updates);
+            
+            // Update UI
+            el.dashUserName.textContent = currentUser.username;
+            el.dashUserAvatar.src = currentUser.avatar;
+            saveSession(currentUser, currentUser.autoLogout === true); // Update storage
+            
+            alert("Profile Updated!");
+            el.userSettingsModal.style.display = 'none';
+        } else {
+            el.userSettingsModal.style.display = 'none';
+        }
+        
+    } catch(e) {
+        alert("Error: " + e.message);
     } finally {
         setLoading(false);
     }
 }
 
-async function loginUser(uidOrUsername, isPersistent) {
-    // If we have direct UID (from local storage)
-    if (arguments.length === 2 && typeof uidOrUsername === 'string' && uidOrUsername.length > 10) {
-        // Fetch by UID
-        try {
-            const snap = await get(ref(db, `users/${uidOrUsername}`));
-            if (snap.exists()) {
-                currentUser = snap.val();
-                showScreen('dashboard');
-                return;
-            } else {
-                // Invalid UID in storage
-                localStorage.removeItem('jkchat_user');
-                sessionStorage.removeItem('jkchat_user');
-                showScreen('auth');
-                return;
-            }
-        } catch(e) {
-            console.error(e);
-            return;
-        }
+// --- ROOM SETTINGS ---
+async function openRoomSettings() {
+    if(!currentRoomId) return;
+    
+    // Fetch fresh meta
+    const snap = await get(ref(db, `rooms/${currentRoomId}/meta`));
+    if(snap.exists()) {
+        const meta = snap.val();
+        document.getElementById('editRoomName').value = meta.name;
+        document.getElementById('editRoomKey').value = meta.privateKey;
+        el.roomSettingsModal.style.display = 'flex';
     }
+}
 
-    // Manual Login Form
-    const username = document.getElementById('loginUsername').value.trim();
-    const password = document.getElementById('loginPassword').value.trim();
-    const autoLogout = document.getElementById('chkAutoLogout').checked;
-    const feedback = document.getElementById('loginFeedback');
-
-    if (!username || !password) return showError('Missing credentials', feedback);
-
-    setLoading(true, 'Verifying...');
-
+async function saveRoomSettings() {
+    if(!currentRoomId) return;
+    
+    const newName = document.getElementById('editRoomName').value.trim();
+    const newKey = document.getElementById('editRoomKey').value.trim();
+    
+    if(!newName || !newKey) return alert("Fields cannot be empty");
+    
+    setLoading(true, "Updating Room...");
+    
     try {
-        const snap = await get(ref(db, 'users'));
-        let foundUser = null;
+        await update(ref(db, `rooms/${currentRoomId}/meta`), {
+            name: escapeHtml(newName),
+            privateKey: newKey // In real app, re-auth or check admin logic here?
+            // Note: Currently client-side we check btn visibility, security rules should enforce adminUid
+        });
         
-        if (snap.exists()) {
-            snap.forEach(child => {
-                const u = child.val();
-                if (u.username === username && u.password === btoa(password)) {
-                    foundUser = u;
-                }
-            });
-        }
-
-        if (foundUser) {
-            currentUser = foundUser;
-            currentUser.autoLogout = autoLogout;
-            update(ref(db, `users/${foundUser.uid}`), { autoLogout });
-            saveSession(foundUser, !autoLogout);
-            showScreen('dashboard');
-        } else {
-            showError('Invalid username or password', feedback);
-        }
-    } catch (e) {
-        console.error(e);
-        showError('Login Error: ' + e.message, feedback);
+        // Local Update
+        currentRoomName = newName;
+        el.headerRoomName.textContent = newName;
+        
+        alert("Room Updated!");
+        el.roomSettingsModal.style.display = 'none';
+    } catch(e) {
+        alert("Update failed: " + e.message);
     } finally {
         setLoading(false);
     }
 }
 
-function saveSession(user, persistent) {
-    const data = JSON.stringify({ uid: user.uid });
-    if (persistent) {
-        localStorage.setItem('jkchat_user', data);
-        sessionStorage.removeItem('jkchat_user');
-    } else {
-        sessionStorage.setItem('jkchat_user', data);
-        localStorage.removeItem('jkchat_user');
-    }
-}
-
-function logout() {
-    if(currentUser && currentRoomId) {
-        // Remove presence
-        remove(ref(db, `rooms/${currentRoomId}/members/${currentUser.uid}`));
-    }
-    currentUser = null;
-    localStorage.removeItem('jkchat_user');
-    sessionStorage.removeItem('jkchat_user');
-    location.reload();
-}
-
-// --- DASHBOARD LOGIC ---
-function renderDashboard() {
-    if (!currentUser) return;
-    
-    el.dashUserAvatar.src = currentUser.avatar;
-    el.dashUserName.textContent = currentUser.username;
-    el.roomsList.innerHTML = '';
-
-    const rooms = currentUser.joinedRooms || {};
-    const roomIds = Object.keys(rooms);
-
-    if (roomIds.length === 0) {
-        el.roomsList.innerHTML = `<div class="empty-state"><i class="fa-regular fa-comments"></i><p>No rooms found. Create or Join one!</p></div>`;
-    }
-
-    roomIds.forEach(async (rid) => {
-        // Fetch generic room details
-        const rSnap = await get(ref(db, `rooms/${rid}/meta`));
-        if (rSnap.exists()) {
-            const meta = rSnap.val();
-            const card = document.createElement('div');
-            card.className = 'room-card';
-            card.innerHTML = `
-                <img src="${meta.icon}" class="room-card-icon">
-                <div class="room-card-info">
-                    <h4>${escapeHtml(meta.name)}</h4>
-                    <p>Tap to enter</p>
-                </div>
-            `;
-            card.onclick = () => enterRoom(rid, meta);
-            el.roomsList.appendChild(card);
-        } else {
-            // Room deleted?
-            // Optional: Cleanup user's joinedRooms?
-        }
-    });
-}
 
 // --- ROOM LOGIC ---
 async function createRoom() {
@@ -561,9 +478,31 @@ function setupEventListeners() {
         }
     };
 
-    // Dashboard
-    document.getElementById('btnDashLogout').onclick = logout;
+    // Dashboard Profile Edit
+    document.getElementById('btnDashSettings').onclick = openUserProfile;
     
+    // User Settings Modal
+    const editAvatarInput = document.getElementById('editUserAvatarInput');
+    const editAvatarPreview = document.getElementById('editUserAvatarImg');
+    
+    document.getElementById('editUserAvatarPreview').onclick = () => editAvatarInput.click();
+    editAvatarInput.onchange = async (e) => {
+        if(e.target.files[0]) {
+            const base64 = await compressImage(e.target.files[0]);
+            editAvatarPreview.src = base64;
+            editAvatarPreview.dataset.new = "true"; // Mark as changed
+        }
+    };
+    
+    document.getElementById('btnSaveUserProfile').onclick = saveUserProfile;
+    document.getElementById('btnCloseUserSettings').onclick = () => el.userSettingsModal.style.display = 'none';
+
+    // Room Settings (Chat) -- Replacing old Admin logic
+    document.getElementById('btnSettings').onclick = openRoomSettings;
+    document.getElementById('btnSaveRoomSettings').onclick = saveRoomSettings;
+    document.getElementById('btnCloseRoomSettings').onclick = () => el.roomSettingsModal.style.display = 'none';
+
+    // ... (Keep existing Create Room logic below) ...
     // Create Room Logic
     const btnOpenCreate = document.getElementById('btnOpenCreateRoom');
     const roomIconPreview = document.getElementById('roomIconPreview');

@@ -159,23 +159,53 @@
         </div>
     </div>
 
-    <!-- ADMIN MODAL -->
-    <div class="modal-overlay" id="adminModal">
+    <!-- ROOM SETTINGS MODAL -->
+    <div class="modal-overlay" id="roomSettingsModal">
         <div class="modal-card">
             <div class="modal-header">
                 <h2>Room Settings</h2>
-                <button class="close-modal" id="btnCloseAdmin">&times;</button>
+                <button class="close-modal" id="btnCloseRoomSettings">&times;</button>
             </div>
             <div class="modal-body">
-                <label class="modal-label">Update Private Key</label>
-                <input type="text" class="modal-input" id="newRoomKey" placeholder="New Password">
-                <button class="modal-btn" id="btnUpdateKey" style="background: var(--primary);">Update Key</button>
+                <label class="modal-label">Room Name</label>
+                <input type="text" class="modal-input" id="editRoomName" placeholder="Room Name">
+                
+                <label class="modal-label">Room Password</label>
+                <input type="text" class="modal-input" id="editRoomKey" placeholder="Current Password">
+                
+                <button class="modal-btn" id="btnSaveRoomSettings">Save Changes</button>
 
                 <div class="divider"></div>
 
                 <label class="modal-label" style="color:#ff4444;">Danger Zone</label>
-                <p style="font-size:13px; color:var(--text-sub); margin-bottom:10px;">Deleting a room is permanent and cannot be undone.</p>
                 <button class="modal-btn" id="btnDeleteRoom" style="background: #ff4444;">Delete Room</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- USER SETTINGS MODAL -->
+    <div class="modal-overlay" id="userSettingsModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2>Edit Profile</h2>
+                <button class="close-modal" id="btnCloseUserSettings">&times;</button>
+            </div>
+            <div class="modal-body custom-scrollbar">
+                <div class="profile-upload-section">
+                    <div class="avatar-preview-large" id="editUserAvatarPreview">
+                        <img src="" id="editUserAvatarImg">
+                        <div class="avatar-overlay"><i class="fa-solid fa-camera"></i></div>
+                    </div>
+                    <input type="file" id="editUserAvatarInput" accept="image/*" hidden>
+                </div>
+
+                <label class="modal-label">Display Name</label>
+                <input type="text" class="modal-input" id="editUserName">
+
+                <label class="modal-label">New Password (Optional)</label>
+                <input type="password" class="modal-input" id="editUserPass" placeholder="Leave empty to keep current">
+
+                <button class="modal-btn" id="btnSaveUserProfile">Save Profile</button>
             </div>
         </div>
     </div>
