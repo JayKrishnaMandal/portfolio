@@ -138,7 +138,7 @@
             </div>
 
             <!-- Grid -->
-            <div id="roomsList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+            <div id="roomsList" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 mb-8">
                 <!-- Room Items Injected Here -->
                  <div class="col-span-full border-2 border-dashed border-gray-300 rounded-2xl p-12 text-center text-text-sub bg-white">
                     <i class="fa-regular fa-comments text-4xl mb-3 text-gray-300"></i>
@@ -153,10 +153,11 @@
                     <i class="fa-solid fa-door-open text-primary"></i> Join Existing Room
                 </h3>
                 <div class="flex flex-col sm:flex-row gap-3">
-                    <input type="text" id="dashJoinName" placeholder="Room Name" class="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary focus:ring-4 focus:ring-blue-500/10">
-                    <input type="password" id="dashJoinKey" placeholder="Room Key" class="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary focus:ring-4 focus:ring-blue-500/10">
-                    <button id="btnDashJoin" class="w-14 bg-gray-900 text-white rounded-xl hover:bg-black transition-all flex items-center justify-center shadow-lg">
-                        <i class="fa-solid fa-arrow-right"></i>
+                    <input type="text" id="dashJoinName" placeholder="Room Name" class="flex-1 px-4 py-3 sm:py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary focus:ring-4 focus:ring-blue-500/10">
+                    <input type="password" id="dashJoinKey" placeholder="Room Key" class="flex-1 px-4 py-3 sm:py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary focus:ring-4 focus:ring-blue-500/10">
+                    <button id="btnDashJoin" class="w-full sm:w-14 h-12 sm:h-auto bg-primary hover:bg-primary-dark text-white rounded-xl transition-all flex items-center justify-center shadow-lg font-semibold sm:font-normal">
+                        <span class="sm:hidden">Join Room</span>
+                        <i class="fa-solid fa-arrow-right hidden sm:inline"></i>
                     </button>
                 </div>
             </div>
@@ -170,7 +171,7 @@
         <div class="sidebar-overlay fixed inset-0 bg-black/50 backdrop-blur-sm z-40 hidden md:hidden"></div>
 
         <!-- Sidebar -->
-        <aside id="sidebar" class="fixed md:relative top-0 left-0 h-full w-[80%] max-w-[320px] md:w-[320px] bg-white border-r border-gray-200 z-50 flex flex-col transition-transform duration-300 -translate-x-full md:translate-x-0 shadow-2xl md:shadow-none">
+        <aside id="sidebar" class="fixed md:relative top-0 left-0 h-full w-[85%] max-w-[320px] md:w-[280px] lg:w-[320px] bg-white border-r border-gray-200 z-50 flex flex-col transition-transform duration-300 -translate-x-full md:translate-x-0 shadow-2xl md:shadow-none">
             <div class="h-16 border-b border-gray-200 flex items-center justify-between px-4 shrink-0">
                 <div class="flex items-center gap-3">
                     <img id="sidebarRoomIcon" class="w-10 h-10 rounded-full border border-gray-200 object-cover" src="">
@@ -195,12 +196,12 @@
         <!-- Chat Area -->
         <main class="flex-1 flex flex-col h-full relative bg-gray-50 w-full min-w-0">
             <!-- Header -->
-            <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 shadow-sm z-30 shrink-0">
-                <div class="flex items-center gap-3">
-                    <i id="btnMobileMenu" class="fa-solid fa-bars text-xl md:hidden cursor-pointer p-2"></i>
-                    <img id="headerRoomIcon" class="w-10 h-10 rounded-full border border-gray-200 hidden md:block object-cover">
-                    <div>
-                        <div id="headerRoomName" class="font-bold text-text-main text-lg leading-tight">Room Name</div>
+            <header class="h-14 sm:h-16 bg-white border-b border-gray-200 flex items-center justify-between px-3 sm:px-4 shadow-sm z-30 shrink-0">
+                <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                    <i id="btnMobileMenu" class="fa-solid fa-bars text-lg sm:text-xl md:hidden cursor-pointer p-2 -ml-2 hover:bg-gray-100 rounded-lg transition-colors"></i>
+                    <img id="headerRoomIcon" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-gray-200 hidden md:block object-cover flex-shrink-0">
+                    <div class="min-w-0 flex-1">
+                        <div id="headerRoomName" class="font-bold text-text-main text-base sm:text-lg leading-tight truncate">Room Name</div>
                         <div id="typingIndicator" class="text-xs text-primary font-medium h-4"></div>
                     </div>
                 </div>
@@ -208,10 +209,10 @@
             </header>
 
             <!-- Messages -->
-            <div id="messages" class="flex-1 overflow-y-auto p-4 flex flex-col gap-3 scroll-smooth"></div>
+            <div id="messages" class="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 flex flex-col gap-2 sm:gap-3 scroll-smooth"></div>
 
             <!-- Input Area -->
-            <div class="p-3 bg-white border-t border-gray-200 z-30 pb-[env(safe-area-inset-bottom)]">
+            <div class="p-2 sm:p-3 bg-white border-t border-gray-200 z-30 pb-[calc(0.5rem+env(safe-area-inset-bottom))] sm:pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
                 <!-- Reply Preview -->
                 <div id="replyPreview" class="hidden items-center justify-between mb-2 p-3 bg-gray-50 rounded-xl border border-blue-100 border-l-4 border-l-primary">
                     <div class="flex-1 border-l-2 border-primary pl-3">
@@ -221,34 +222,20 @@
                     <button id="btnCloseReply" class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs hover:bg-gray-300">&times;</button>
                 </div>
 
-                <div class="flex items-end gap-2 max-w-4xl mx-auto w-full">
-                    <div class="flex-1 bg-gray-100 rounded-[24px] flex items-center px-2 py-1 border border-transparent focus-within:bg-white focus-within:border-primary focus-within:ring-2 focus-within:ring-blue-500/10 transition-all">
-                        <button id="btnEmoji" class="p-2 text-text-sub hover:text-primary transition-colors text-xl relative">
+                <div class="flex items-end gap-1.5 sm:gap-2 max-w-4xl mx-auto w-full">
+                    <div class="flex-1 bg-gray-100 rounded-[24px] flex items-center px-1.5 sm:px-2 py-1 border border-transparent focus-within:bg-white focus-within:border-primary focus-within:ring-2 focus-within:ring-blue-500/10 transition-all">
+                        <button id="btnEmoji" class="p-1.5 sm:p-2 text-text-sub hover:text-primary transition-colors text-lg sm:text-xl relative flex-shrink-0">
                             <i class="fa-regular fa-face-smile"></i>
                         <div id="emojiPickerContainer" class="absolute bottom-12 left-0 z-50 shadow-2xl rounded-2xl overflow-hidden border border-gray-100" style="display:none;"></div>
                         </button>
-                        <input type="text" id="msgInput" placeholder="Message..." class="flex-1 bg-transparent border-none focus:outline-none focus:ring-0 p-2 text-text-main placeholder-gray-400" autocomplete="off" maxlength="1000">
+                        <input type="text" id="msgInput" placeholder="Message..." class="flex-1 bg-transparent border-none focus:outline-none focus:ring-0 p-2 text-sm sm:text-base text-text-main placeholder-gray-400 min-w-0" autocomplete="off" maxlength="1000">
                     </div>
-                    <button id="btnSend" class="w-11 h-11 rounded-full bg-primary text-white flex items-center justify-center shadow-lg shadow-blue-500/30 hover:bg-primary-dark hover:scale-105 active:scale-95 transition-all">
-                        <i class="fa-solid fa-paper-plane text-sm"></i>
+                    <button id="btnSend" class="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-primary text-white flex items-center justify-center shadow-lg shadow-blue-500/30 hover:bg-primary-dark active:scale-95 transition-all flex-shrink-0">
+                        <i class="fa-solid fa-paper-plane text-xs sm:text-sm"></i>
                     </button>
                 </div>
             </div>
         </main>
-    </div>
-
-    <!-- MODALS (Tailwind) -->
-    
-    <!-- Create Room Modal -->
-    <div id="createModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[2000] hidden items-center justify-center p-4">
-        <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden animate-[scaleIn_0.2s_ease-out]">
-            <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                <h2 class="font-bold text-lg text-text-main">Create Room</h2>
-                <button id="btnCloseCreate" class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-text-sub hover:bg-gray-300 transition-colors">&times;</button>
-            </div>
-            <div class="p-6 max-h-[80vh] overflow-y-auto">
-                <div id="roomIconUpload" class="bg-gray-50 border-2 border-dashed border-gray-200 hover:border-primary hover:bg-blue-50/30 rounded-xl p-6 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all mb-6 group">
-                    <div id="roomIconPreview" class="w-20 h-20 rounded-2xl bg-white border border-gray-200 shadow-sm flex items-center justify-center overflow-hidden">
                         <i class="fa-solid fa-cloud-arrow-up text-3xl text-gray-300 group-hover:text-primary transition-colors"></i>
                     </div>
                     <div class="text-center">

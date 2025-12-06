@@ -608,17 +608,17 @@ function renderMessage(msg) {
     if (!isMe) {
         // Received message with avatar
         content += `
-            <div class="flex gap-2 max-w-[75%]">
-                <img class="w-8 h-8 rounded-full object-cover flex-shrink-0" src="${msg.avatar}" alt="avatar">
-                <div class="flex flex-col">
-                    <span class="text-xs text-text-sub font-semibold mb-1 ml-3">${escapeHtml(msg.user)}</span>
-                    <div class="bg-white border border-gray-200 text-text-main px-4 py-2.5 rounded-[20px] rounded-tl-sm shadow-sm">
+            <div class="flex gap-1.5 sm:gap-2 max-w-[85%] sm:max-w-[75%]">
+                <img class="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover flex-shrink-0" src="${msg.avatar}" alt="avatar">
+                <div class="flex flex-col min-w-0">
+                    <span class="text-[11px] sm:text-xs text-text-sub font-semibold mb-1 ml-2 sm:ml-3">${escapeHtml(msg.user)}</span>
+                    <div class="bg-white border border-gray-200 text-text-main px-3 py-2 sm:px-4 sm:py-2.5 rounded-[18px] sm:rounded-[20px] rounded-tl-sm shadow-sm text-sm sm:text-base">
         `;
     } else {
         // Sent message (aligned right)
         content += `
-            <div class="flex flex-col max-w-[75%]">
-                <div class="bg-primary text-white px-4 py-2.5 rounded-[20px] rounded-tr-sm shadow-lg shadow-blue-500/20">
+            <div class="flex flex-col max-w-[85%] sm:max-w-[75%]">
+                <div class="bg-primary text-white px-3 py-2 sm:px-4 sm:py-2.5 rounded-[18px] sm:rounded-[20px] rounded-tr-sm shadow-lg shadow-blue-500/20 text-sm sm:text-base">
         `;
     }
 
