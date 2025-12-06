@@ -896,6 +896,32 @@ function setupEventListeners() {
     document.getElementById('btnDarkMode').onclick = () => toggleDarkMode();
     document.getElementById('btnCloseReply').onclick = closeReply;
     
+    // Logout Event Listeners
+    const btnDashLogout = document.getElementById('btnDashLogout');
+    const btnChatLogout = document.getElementById('btnLogout');
+    
+    if (btnDashLogout) {
+        console.log('Dashboard logout button found, attaching listener');
+        btnDashLogout.onclick = (e) => {
+            e.preventDefault();
+            console.log('Dashboard logout clicked!');
+            logout();
+        };
+    } else {
+        console.warn('btnDashLogout not found in DOM');
+    }
+    
+    if (btnChatLogout) {
+        console.log('Chat logout button found, attaching listener');
+        btnChatLogout.onclick = (e) => {
+            e.preventDefault();
+            console.log('Chat logout clicked!');
+            logout();
+        };
+    } else {
+        console.warn('btnLogout not found in DOM');
+    }
+    
     // Emoji Init (only if container exists)
     const emojiContainer = document.getElementById('emojiPickerContainer');
     if(emojiContainer) {
