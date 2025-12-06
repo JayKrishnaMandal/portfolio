@@ -12,7 +12,7 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: '#0065ff', // Enterprise Blue
+                        primary: '#0065ff',
                         'primary-dark': '#0747a6',
                         bg: '#f8f9fa',
                         'card-bg': '#ffffff',
@@ -31,10 +31,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Custom CSS (Animations Only) -->
-    <link rel="stylesheet" href="style.css?v=5.0">
+    <link rel="stylesheet" href="style.css?v=6.0">
     <style>
         body { font-family: 'Inter', sans-serif; }
-        /* Hide scrollbar for Chrome, Safari and Opera */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
@@ -159,10 +158,25 @@
                         <span class="sm:hidden">Join Room</span>
                         <i class="fa-solid fa-arrow-right hidden sm:inline"></i>
                     </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. MESSENGER APP UI -->
+    <div id="app" class="hidden h-full w-full bg-white flex flex-col md:flex-row">
+        
+        <!-- Mobile Sidebar Overlay -->
+        <div id="sidebarOverlay" class="sidebar-overlay fixed inset-0 bg-black/50 backdrop-blur-sm z-40 hidden"></div>
+
+        <!-- Sidebar -->
+        <aside id="sidebar" class="fixed md:relative top-0 left-0 h-full w-[85%] max-w-[320px] md:w-[280px] lg:w-[320px] bg-white border-r border-gray-200 z-50 flex flex-col transition-transform duration-300 -translate-x-full md:translate-x-0 shadow-2xl md:shadow-none">
+            <div class="h-16 border-b border-gray-200 flex items-center justify-between px-4 shrink-0">
+                <div class="flex items-center gap-3">
                     <img id="sidebarRoomIcon" class="w-10 h-10 rounded-full border border-gray-200 object-cover" src="">
                     <span id="sidebarRoomNameDisplay" class="font-bold text-text-main truncate max-w-[150px]">Room</span>
                 </div>
-                <button id="btnDarkMode" class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-text-main hover:bg-gray-200 transition-colors">
+                <button id="btn DarkMode" class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-text-main hover:bg-gray-200 transition-colors">
                     <i class="fa-solid fa-moon"></i>
                 </button>
             </div>
@@ -223,13 +237,10 @@
         </main>
     </div>
 
-    <!-- MODALS (Tailwind) -->
-    
-    <!-- Create Room Modal -->
+    <!-- Create Room Modal (Premium Design) -->
     <div id="createModal" class="fixed inset-0 bg-gray-900/60 backdrop-blur-md z-[2000] hidden items-center justify-center p-3 sm:p-4 transition-all duration-300">
         <div class="bg-white w-full max-w-[95%] sm:max-w-sm rounded-[24px] shadow-2xl transform scale-100 animate-[fadeInUp_0.3s_ease-out] overflow-hidden border border-white/20">
-            <!-- Header -->
-            <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/80">
+            <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-blue-50 to-transparent">
                 <div>
                     <h2 class="font-bold text-xl text-text-main tracking-tight">Create Room</h2>
                     <p class="text-xs text-text-sub mt-0.5">Setup a new space for your team</p>
@@ -237,10 +248,7 @@
                 <button id="btnCloseCreate" class="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-text-sub hover:bg-red-50 hover:text-red-500 hover:border-red-100 transition-all shadow-sm">&times;</button>
             </div>
             
-            <!-- Body -->
             <div class="p-6 max-h-[75vh] overflow-y-auto custom-scrollbar">
-                
-                <!-- Upload Area -->
                 <div id="roomIconUpload" class="group relative bg-gradient-to-b from-blue-50/50 to-transparent border-2 border-dashed border-blue-200 hover:border-primary rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer transition-all duration-300 mb-6">
                     <div id="roomIconPreview" class="w-20 h-20 rounded-2xl bg-white shadow-md flex items-center justify-center overflow-hidden mb-3 group-hover:scale-110 transition-transform duration-300 border border-gray-100">
                         <i class="fa-solid fa-cloud-arrow-up text-3xl text-blue-300 group-hover:text-primary transition-colors"></i>
@@ -248,16 +256,12 @@
                     <span class="text-sm font-bold text-text-main group-hover:text-primary transition-colors">Upload Room Icon</span>
                     <span class="text-[10px] text-text-sub mt-1">Supports JPG, PNG (Max 2MB)</span>
                     <input type="file" id="roomIconInput" accept="image/*" class="hidden">
-                    
-                    <!-- Hover Effect overlay -->
                     <div class="absolute inset-0 bg-primary/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
                 </div>
 
-                <!-- Presets -->
                 <label class="block text-xs font-bold text-text-sub uppercase mb-3 tracking-wider">Or Choose a Style</label>
                 <div id="createRoomAvatarGrid" class="grid grid-cols-4 gap-3 mb-6"></div>
 
-                <!-- Inputs -->
                 <div class="space-y-5">
                     <div class="relative group">
                         <input type="text" id="newRoomName" placeholder=" " class="peer w-full px-4 pt-5 pb-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:bg-white focus:border-primary focus:ring-4 focus:ring-blue-500/10 transition-all">
@@ -270,7 +274,6 @@
                 </div>
             </div>
 
-            <!-- Footer -->
             <div class="p-4 border-t border-gray-100 bg-gray-50 flex gap-3">
                 <button id="btnCancelCreate" class="flex-1 py-3 bg-white border border-gray-200 text-text-main font-bold rounded-xl hover:bg-gray-50 transition-colors shadow-sm">Cancel</button>
                 <button id="btnConfirmCreate" class="flex-1 py-3 bg-gradient-to-r from-primary to-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all">Create Room</button>
