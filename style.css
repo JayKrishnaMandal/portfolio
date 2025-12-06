@@ -234,6 +234,51 @@ body.dark-mode ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); }
 .btn-delete { background: #ff4444; color: white; width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; margin-top: 10px; }
 .btn-delete:hover { background: #cc0000; }
 
+
+/* Create Room Modal Specifics */
+.room-upload-area {
+    background: var(--input-bg); border: 2px dashed var(--border);
+    border-radius: 12px; padding: 20px; text-align: center;
+    margin-bottom: 20px; cursor: pointer; transition: 0.2s;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 10px;
+}
+.room-upload-area:hover { border-color: var(--primary); background: rgba(0, 132, 255, 0.05); }
+
+.icon-preview {
+    width: 80px; height: 80px; border-radius: 16px;
+    background: var(--card-bg); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 32px; color: var(--text-sub); overflow: hidden;
+}
+.icon-preview img { width: 100%; height: 100%; object-fit: cover; }
+
+.upload-text { display: flex; flex-direction: column; gap: 2px; }
+.upload-text span { font-weight: 600; color: var(--primary); font-size: 14px; }
+.upload-text small { color: var(--text-sub); font-size: 11px; }
+
+.avatar-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+.avatar-option { 
+    width: 100%; aspect-ratio: 1; border-radius: 10px; 
+    cursor: pointer; border: 2px solid transparent; 
+    background: var(--input-bg); padding: 4px;
+}
+.avatar-option:hover { transform: scale(1.05); }
+.avatar-option.selected { border-color: var(--primary); background: rgba(0, 132, 255, 0.1); }
+
+.input-stack { display: flex; flex-direction: column; gap: 15px; margin-bottom: 25px; }
+.input-stack .modal-input { margin-bottom: 0; }
+
+.modal-actions { display: flex; gap: 10px; margin-top: 10px; }
+.modal-btn-secondary {
+    background: var(--input-bg); color: var(--text-main);
+    font-size: 17px; padding: 14px; border-radius: 10px;
+    width: 100%; font-weight: 700; border: none; cursor: pointer;
+}
+.modal-btn-secondary:hover { background: var(--border); }
+
+.divider { height: 1px; background: var(--border); margin: 20px 0; }
+
 /* --- APP LAYOUT (FLEX) --- */
 .app-container { display: none; width: 100%; height: 100%; background: var(--bg); position: relative; overflow: hidden; }
 .app-container.visible { display: flex; }
