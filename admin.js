@@ -18,10 +18,12 @@ document.getElementById('btnLogin').addEventListener('click', async () => {
     const input = document.getElementById('adminKey').value;
     const btn = document.getElementById('btnLogin');
     
+    if(!input) return alert("Please enter a key.");
+    
     btn.innerText = "Verifying...";
     try {
         const snap = await get(SYSTEM_REF);
-        const realKey = snap.val();
+        const realKey = snap.exists() ? snap.val() : 'admin123'; // Fallback if DB empty
         
         if(input === realKey) {
             document.getElementById('loginOverlay').style.display = 'none';
@@ -30,7 +32,7 @@ document.getElementById('btnLogin').addEventListener('click', async () => {
             alert("Access Denied: Invalid Key");
         }
     } catch(e) {
-        alert("Connection Error");
+        alert("System Error: " + e.message + "\nCheck your internet connection.");
         console.error(e);
     }
     btn.innerText = "Unlock Dashboard";

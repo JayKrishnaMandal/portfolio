@@ -1,31 +1,6 @@
 {
   "rules": {
     ".read": true,
-    "system": {
-      ".write": true
-    },
-    "rooms": {
-      "$roomId": {
-        // Allow room creation
-        ".write": "!data.exists()", 
-        "messages": {
-           "$msgId": {
-             ".write": true,
-             ".validate": "newData.hasChildren(['user', 'text', 'time'])"
-           }
-        },
-        "members": {
-           ".indexOn": ["name"], 
-           "$uid": {
-             ".write": true
-           }
-        },
-        "banned": {
-            ".write": true
-        },
-        "password": { ".write": true },
-        "admin": { ".write": true } 
-      }
-    }
+    ".write": true
   }
 }
