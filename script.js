@@ -325,6 +325,30 @@ async function openRoomSettings() {
         const meta = snap.val();
         document.getElementById('editRoomName').value = meta.name;
         document.getElementById('editRoomKey').value = meta.privateKey;
+        
+        // Attach delete room event listener here (when modal is opened)
+        const deleteRoomBtn = document.getElementById('btnDeleteRoom');
+        if(deleteRoomBtn) {
+            // Remove any existing event listeners by cloning the node
+            const newDeleteBtn = deleteRoomBtn.cloneNode(true);
+            deleteRoomBtn.parentNode.replaceChild(newDeleteBtn, deleteRoomBtn);
+            
+            // Attach new event listener
+            newDeleteBtn.onclick = deleteRoom;
+            console.log('[DELETE ROOM] Delete room button event listener attached');
+            
+            // Show/hide delete button based on admin status
+            if(currentUser.uid === currentRoomAdminUid) {
+                newDeleteBtn.style.display = 'block';
+                console.log('[DELETE ROOM] User is admin, showing delete button');
+            } else {
+                newDeleteBtn.style.display = 'none';
+                console.log('[DELETE ROOM] User is not admin, hiding delete button');
+            }
+        } else {
+            console.error('[DELETE ROOM] btnDeleteRoom element NOT FOUND in modal');
+        }
+        
         el.roomSettingsModal.classList.add('flex');
         el.roomSettingsModal.classList.remove('hidden');
     }
@@ -356,6 +380,68 @@ async function saveRoomSettings() {
         el.roomSettingsModal.classList.add('hidden');
     } catch(e) {
         alert("Update failed: " + e.message);
+    } finally {
+        setLoading(false);
+    }
+}
+
+async function deleteRoom() {
+    console.log('[DELETE ROOM] Function called');
+    console.log('[DELETE ROOM] currentRoomId:', currentRoomId);
+    console.log('[DELETE ROOM] currentUser.uid:', currentUser?.uid);
+    console.log('[DELETE ROOM] currentRoomAdminUid:', currentRoomAdminUid);
+    
+    if(!currentRoomId) {
+        console.error('[DELETE ROOM] No currentRoomId, aborting');
+        return;
+    }
+    
+    // Verify user is admin
+    if(currentUser.uid !== currentRoomAdminUid) {
+        console.error('[DELETE ROOM] User is not admin. User UID:', currentUser.uid, 'Admin UID:', currentRoomAdminUid);
+        alert("Only the room creator can delete this room.");
+        return;
+    }
+    
+    console.log('[DELETE ROOM] User verified as admin, showing confirmation');
+    if(!confirm("Are you sure you want to permanently delete this room? This action cannot be undone!")) {
+        console.log('[DELETE ROOM] User cancelled deletion');
+        return;
+    }
+    
+    console.log('[DELETE ROOM] User confirmed deletion, proceeding...');
+    setLoading(true, "Deleting Room...");
+    
+    try {
+        console.log('[DELETE ROOM] Removing room from database');
+        // Remove room from database
+        await remove(ref(db, `rooms/${currentRoomId}`));
+        
+        console.log('[DELETE ROOM] Removing room from user joinedRooms');
+        // Remove room from user's joined rooms
+        await remove(ref(db, `users/${currentUser.uid}/joinedRooms/${currentRoomId}`));
+        
+        // Update local state
+        if(currentUser.joinedRooms) {
+            delete currentUser.joinedRooms[currentRoomId];
+        }
+        
+        // Close modal
+        el.roomSettingsModal.classList.remove('flex');
+        el.roomSettingsModal.classList.add('hidden');
+        
+        // Redirect to dashboard
+        currentRoomId = null;
+        currentRoomName = null;
+        currentRoomKey = null;
+        currentRoomAdminUid = null;
+        
+        console.log('[DELETE ROOM] Room deleted successfully!');
+        alert("Room deleted successfully!");
+        showScreen('dashboard');
+    } catch(e) {
+        console.error('[DELETE ROOM] Error:', e);
+        alert("Failed to delete room: " + e.message);
     } finally {
         setLoading(false);
     }
@@ -837,6 +923,56 @@ function setupEventListeners() {
     document.getElementById('btnSettings').onclick = openRoomSettings;
     document.getElementById('btnSaveRoomSettings').onclick = saveRoomSettings;
     document.getElementById('btnCloseRoomSettings').onclick = () => { el.roomSettingsModal.classList.remove('flex'); el.roomSettingsModal.classList.add('hidden'); };
+    
+    // Delete Room Button
+    const btnDeleteRoom = document.getElementById('btnDeleteRoom');
+    if (btnDeleteRoom) {
+        btnDeleteRoom.onclick = async () => {
+            if (!currentRoomId || !currentUser) {
+                alert('No room loaded');
+                return;
+            }
+            
+            // Check if user is admin
+            const roomRef = ref(db, `rooms/${currentRoomId}/meta/adminUid`);
+            const adminSnap = await get(roomRef);
+            
+            if (adminSnap.val() !== currentUser.uid) {
+                alert('Only the room creator can delete the room!');
+                return;
+            }
+            
+            const confirmation = confirm(`Are you sure you want to DELETE this room? This cannot be undone!`);
+            if (!confirmation) return;
+            
+            try {
+                // Remove room data
+                await remove(ref(db, `rooms/${currentRoomId}`));
+                
+                // Remove from user's joined rooms
+                if (currentUser.joinedRooms && currentUser.joinedRooms[currentRoomId]) {
+                    delete currentUser.joinedRooms[currentRoomId];
+                    await update(ref(db, `users/${currentUser.uid}`), {
+                        joinedRooms: currentUser.joinedRooms
+                    });
+                    saveSession(currentUser, currentUser.autoLogout === true);
+                }
+                
+                alert('Room deleted successfully!');
+                el.roomSettingsModal.classList.add('hidden');
+                el.roomSettingsModal.classList.remove('flex');
+                showScreen('dashboard');
+                renderDashboard();
+            } catch (error) {
+                console.error('Delete room error:', error);
+                alert('Failed to delete room: ' + error.message);
+            }
+        };
+    }
+    // Note: Delete room button event listener is now attached in openRoomSettings() when modal opens
+
+
+
 
     // ... (Keep existing Create Room logic below) ...
     // Create Room Logic
