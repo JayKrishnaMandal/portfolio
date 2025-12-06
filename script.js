@@ -401,22 +401,6 @@ function handleTyping() {
     }
 
     state.inputTimeout = setTimeout(() => {
-        state.isTyping = false;
-        update(ref(db, `rooms/${state.room.id}/members/${state.user.id}`), { typing: false }).catch(()=>{});
-    }, 2000);
-}
-
-function sendMessage() {
-    const text = el.msgInput.value.trim();
-    if(!text) return;
-    push(ref(db, `rooms/${state.room.id}/messages`), { user: state.user.name, avatar: state.user.avatar, text: text, time: Date.now() });
-    el.msgInput.value = ''; el.msgInput.focus();
-}
-
-function renderMessage(msg) {
-    if(!msg || !msg.text) return;
-    const isMe = msg.user === state.user.name;
-    const div = document.createElement('div');
     div.className = `message ${isMe ? 'sent' : 'received'}`;
     const time = new Date(msg.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 

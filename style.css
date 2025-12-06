@@ -136,24 +136,22 @@ body.dark-mode ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); }
 .mobile-menu-btn { display: none; font-size: 20px; cursor: pointer; color: var(--text-main); padding: 8px; margin-left: -8px; }
 .room-info { flex: 1; min-width: 0; }
 .room-name { font-weight: 700; font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.typing-indicator { font-size: 12px; color: var(--primary); height: 15px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: opacity 0.3s; }
+/* Message Reply Styles */
+.reply-preview { display: none; position: absolute; bottom: 100%; left: 0; width: 100%; background: var(--card-bg); padding: 10px 16px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); z-index: 5; flex-direction: row; justify-content: space-between; align-items: center; }
+.reply-info { display: flex; flex-direction: column; overflow: hidden; font-size: 13px; border-left: 3px solid var(--primary); padding-left: 8px; }
+.reply-label { color: var(--primary); font-weight: 600; font-size: 12px; margin-bottom: 2px; }
+.reply-text { color: var(--text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80vw; }
+.close-reply { background: none; border: none; font-size: 20px; color: var(--text-sub); cursor: pointer; padding: 0 10px; }
 
-/* Messages */
-.messages-container { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; background: var(--bg); scroll-behavior: smooth; }
-.message { max-width: 75%; padding: 10px 14px; border-radius: 18px; font-size: 15px; word-wrap: break-word; position: relative; display: flex; flex-direction: column; margin-bottom: 2px; line-height: 1.4; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+.reply-quote { background: rgba(0,0,0,0.05); border-left: 3px solid var(--primary); padding: 6px 8px; margin-bottom: 6px; border-radius: 4px; font-size: 12px; cursor: pointer; opacity: 0.9; }
+.message.sent .reply-quote { background: rgba(255,255,255,0.2); border-left-color: rgba(255,255,255,0.8); color: white; }
+.reply-quote strong { display: block; font-weight: 700; margin-bottom: 2px; }
 
-.message.sent { background: var(--primary-grad); color: var(--msg-sent-text); align-self: flex-end; border-bottom-right-radius: 4px; }
-.message.received { background: var(--msg-received); color: var(--msg-received-text); align-self: flex-start; border-bottom-left-radius: 4px; }
-
-.msg-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; margin-left: -2px; }
-.msg-avatar { width: 18px; height: 18px; border-radius: 50%; opacity: 0.9; object-fit: cover; background: #fff; }
-.msg-name { font-size: 11px; font-weight: 700; opacity: 0.8; }
-.msg-time { font-size: 10px; opacity: 0.6; margin-top: 4px; text-align: right; user-select: none; }
-.message.sent .msg-time { color: rgba(255,255,255,0.85); }
-.message.received .msg-time { color: var(--text-sub); }
+/* Typing Indicator Fix */
+.typing-indicator { font-size: 13px; color: var(--primary); height: 20px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0; transition: opacity 0.3s; margin-top: -2px; }
 
 /* Chat Input */
-.chat-input-area { padding: 12px 16px; border-top: 1px solid var(--border); display: flex; align-items: center; background: var(--card-bg); gap: 10px; }
+.chat-input-area { padding: 12px 16px; border-top: 1px solid var(--border); display: flex; align-items: center; background: var(--card-bg); gap: 10px; position: relative; }
 .chat-input-wrapper { flex: 1; background: var(--input-bg); border-radius: 20px; display: flex; align-items: center; padding: 4px 12px; border: 1px solid transparent; transition: 0.3s; }
 .chat-input-wrapper:focus-within { border-color: var(--primary); background: var(--card-bg); box-shadow: 0 0 0 2px rgba(0, 132, 255, 0.1); }
 
