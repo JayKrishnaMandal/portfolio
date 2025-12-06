@@ -1,6 +1,13 @@
 {
   "rules": {
     ".read": true,
-    ".write": true
+    ".write": true,
+    "rooms": {
+      "$roomId": {
+        "members": {
+           ".indexOn": ["name"]
+        }
+      }
+    }
   }
 }

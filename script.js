@@ -292,7 +292,11 @@ async function attemptJoin() {
         state.user.avatar = state.selectedLoginAvatar;
         saveSession(roomId, roomName, key, user, state.selectedLoginAvatar);
         enterApp(roomId, roomName, data.avatar || getRoomAvatar('default'), data.admin); 
-    } catch(e) { console.error(e); setLoading(false); showError("Connection Error"); }
+    } catch(e) { 
+        console.error("JOIN ERROR:", e); 
+        setLoading(false); 
+        showError("Error: " + e.message); 
+    }
 }
 
 function saveSession(roomId, roomName, roomKey, userName, userAvatar) {
