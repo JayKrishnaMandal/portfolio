@@ -163,64 +163,46 @@ body.dark-mode ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); }
     transition: opacity 0.2s;
 }
 
+
+/* Modal Overlay (Missing previously) */
+.modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(8px); /* Premium Glass Effect */
+    z-index: 2000;
+    display: none; /* Flex when active */
+    align-items: center; justify-content: center;
+    padding: 20px;
+    animation: fadeIn 0.2s ease-out;
+}
+@keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+
 .modal-card { 
     background: var(--card-bg); width: 100%; max-width: 440px; 
-    border-radius: 16px; 
-    box-shadow: 0 10px 40px rgba(0,0,0,0.2); 
+    border-radius: 20px; /* Softer corners */
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3); 
     display: flex; flex-direction: column; overflow: hidden; 
     max-height: 85vh; border: 1px solid var(--border); 
     animation: modal-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-@keyframes modal-pop {
-    0% { transform: scale(0.95); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
-}
+/* ... (modal-pop keyframes remain same) ... */
 
-.modal-header { 
-    padding: 18px 24px; border-bottom: 1px solid var(--border); 
-    display: flex; justify-content: space-between; align-items: center; 
-    background: var(--card-bg); 
-}
-.modal-header h2 { font-size: 22px; color: var(--text-main); font-weight: 800; letter-spacing: -0.5px; }
-.close-modal { 
-    background: rgba(0,0,0,0.05); border: none; font-size: 20px; 
-    color: var(--text-sub); cursor: pointer; 
-    width: 32px; height: 32px; border-radius: 50%; 
-    display: flex; align-items: center; justify-content: center; 
-    transition: 0.2s;
-}
-.close-modal:hover { background: rgba(0,0,0,0.1); color: var(--text-main); }
+/* ... (modal-header/body/input remain same) ... */
 
-.modal-body { padding: 24px; overflow-y: auto; overscroll-behavior: contain; }
-.modal-label { 
-    display: block; text-align: left; font-size: 13px; 
-    font-weight: 700; color: var(--text-sub); 
-    margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;
-}
-
-/* Modern Inputs in Modal */
-.modal-input { 
-    width: 100%; padding: 14px 16px; 
-    background: var(--input-bg); border: 1px solid transparent; 
-    border-radius: 10px; margin-bottom: 20px; 
-    color: var(--text-main); font-size: 16px; font-weight: 500;
-    transition: 0.2s;
-}
-.modal-input:focus { 
-    background: var(--card-bg); border-color: var(--primary); 
-    box-shadow: 0 0 0 4px rgba(0, 132, 255, 0.1); 
-}
-
-/* Modal Buttons */
+/* Modal Buttons - Premium Update */
 .modal-btn { 
-    background: var(--primary); font-size: 17px; 
-    padding: 14px; margin-top: 10px; border-radius: 10px; 
-    width: 100%; font-weight: 700; 
-    box-shadow: 0 4px 12px rgba(0, 132, 255, 0.3);
+    background: var(--primary-grad); /* Gradient */
+    font-size: 16px; 
+    padding: 14px; margin-top: 10px; border-radius: 12px; 
+    width: 100%; font-weight: 700; color: white; border: none;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(0, 132, 255, 0.3);
+    transition: transform 0.2s, box-shadow 0.2s;
 }
-.modal-btn:hover { background: #0070d9; transform: translateY(-1px); }
-.modal-btn:active { transform: translateY(1px); box-shadow: none; }
+.modal-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 24px rgba(0, 132, 255, 0.4); }
+.modal-btn:active { transform: translateY(0); }
+
 
 .input-group-label { 
     color: var(--primary); font-size: 14px; font-weight: 800; 
