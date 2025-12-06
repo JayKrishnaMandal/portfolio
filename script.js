@@ -905,17 +905,9 @@ function setupEventListeners() {
         console.error('[LOGOUT] btnDashLogout NOT FOUND');
     }
     
-    if (btnChatLogout) {
-        console.log('[LOGOUT] Chat logout button FOUND');
-        btnChatLogout.onclick = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            console.log('[LEAVE ROOM] Leave room button clicked!');
-            leaveRoom(); // Changed from logout() to leaveRoom()
-        };
-    } else {
-        console.error('[LOGOUT] btnLogout NOT FOUND');
-    }
+    // NOTE: btnLogout (Leave Room) listener is set in setupRoomListeners()
+    // when entering a room, not here, to ensure it calls leaveRoom() not logout()
+    console.log('[LOGOUT] Leave room button will be configured when entering room');
 
     // Forms
     const btnReg = document.getElementById('btnSubmitRegister');
