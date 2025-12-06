@@ -1,24 +1,28 @@
 {
   "rules": {
     ".read": true,
+    "system": {
+      ".write": true
+    },
     "rooms": {
       "$roomId": {
-        // Only allow creating a room if it doesn't exist
-        ".write": "!data.exists() || !newData.exists()", 
+        // Allow room creation
+        ".write": "!data.exists()", 
         "messages": {
            "$msgId": {
-             ".write": "newData.exists() && newData.hasChildren(['user', 'text', 'time'])",
-             ".validate": "newData.child('text').isString() && newData.child('text').val().length < 1000"
+             ".write": true,
+             ".validate": "newData.hasChildren(['user', 'text', 'time'])"
            }
         },
         "members": {
-           ".indexOn": ["name"], // Required for uniqueness check
+           ".indexOn": ["name"], 
            "$uid": {
-             ".write": true,
-             ".validate": "newData.hasChildren(['name', 'status'])"
+             ".write": true
            }
         },
-        // Allow updates to password/admin only if you are admin (this is client-side logic in our no-auth app, but we keep read open)
+        "banned": {
+            ".write": true
+        },
         "password": { ".write": true },
         "admin": { ".write": true } 
       }
