@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>JKChat - Enterprise Communication</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?v=3.4.1"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0065ff',
+                        'primary-dark': '#0747a6',
+                        bg: '#f8f9fa',
+                        'card-bg': '#ffffff',
+                        'text-main': '#172b4d',
+                        'text-sub': '#5e6c84',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css?v=8.0">
+    
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body { 
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Premium gradient animation */
+        @keyframes gradient-shift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        .animated-gradient {
+            background-size: 200% 200%;
+            animation: gradient-shift 3s ease infinite;
+        }
+    </style>
+</head>
+<body class="bg-bg text-text-main h-[100dvh] w-full overflow-hidden select-none">
+
+    <!-- Toast -->
+    <div id="errorToast" class="fixed top-5 left-1/2 -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded-full shadow-xl z-[9999] hidden font-semibold text-sm transition-all duration-300">
+        Error Message
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[5000] hidden flex-col justify-center items-center text-white">
+        <div class="animate-spin rounded-full h-12 w-12 border-4 border-white/30 border-t-primary mb-4"></div>
+        <div class="loading-text text-base font-medium tracking-wide">Processing...</div>
+    </div>
+
+    <!-- 1. AUTH CONTAINER - PREMIUM REDESIGN -->
+    <div id="authScreen" class="flex h-full w-full items-center justify-center p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-blue-50 via-white to-purple-50 animated-gradient">
+        <div class="bg-white/95 backdrop-blur-xl w-full max-w-[min(95%,440px)] rounded-[32px] shadow-[0_20px_80px_rgba(0,0,0,0.12)] border border-white/60 overflow-hidden">
+            
+            <!-- Header Section with Brand -->
+            <div class="relative px-6 sm:px-10 pt-12 sm:pt-14 pb-8 sm:pb-10 bg-gradient-to-br from-blue-50/80 via-white to-purple-50/60 overflow-hidden">
+                <!-- Decorative circles -->
+                <div class="absolute -top-20 -right-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl"></div>
+                <div class="absolute -bottom-16 -left-16 w-48 h-48 bg-purple-500/5 rounded-full blur-3xl"></div>
+                
+                <div class="text-center relative z-10">
+                    <div class="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-gradient-to-br from-primary to-blue-600 mb-5 shadow-lg shadow-blue-500/30">
+                        <i class="fa-solid fa-comments text-3xl sm:text-4xl text-white"></i>
+                    </div>
+                    <h1 class="text-4xl sm:text-5xl lg:text-6xl font-black mb-3 sm:mb-4">
+                        <span class="bg-gradient-to-r from-primary via-blue-500 to-purple-600 bg-clip-text text-transparent">JKChat</span>
+                    </h1>
+                    <p class="text-text-sub text-base sm:text-lg font-medium px-4">Enterprise Team Communication</p>
+                </div>
+            </div>
+
+            <!-- Content Section -->
+            <div class="px-6 sm:px-10 pb-10 sm:pb-12">
+                <!-- Tabs with improved styling -->
+                <div class="flex bg-gray-100/80 p-1.5 sm:p-2 rounded-2xl mb-8 sm:mb-10 shadow-inner">
+                    <button id="tabLogin" class="flex-1 py-3.5 sm:py-4 text-sm sm:text-base font-bold rounded-xl transition-all duration-200 bg-white text-text-main shadow-md hover:shadow-lg">
+                        <i class="fa-solid fa-right-to-bracket mr-2"></i>Log In
+                    </button>
+                    <button id="tabRegister" class="flex-1 py-3.5 sm:py-4 text-sm sm:text-base font-bold text-text-sub rounded-xl transition-all duration-200 hover:bg-white/50 hover:text-text-main">
+                        <i class="fa-solid fa-user-plus mr-2"></i>Sign Up
+                    </button>
+                </div>
+
+                <!-- Login Form -->
+                <div id="formLogin" class="flex flex-col gap-5 sm:gap-6">
+                    <!-- Username Input -->
+                    <div class="relative group">
+                        <div class="absolute inset-0 bg-gradient-to-r from-primary/20 to-purple-500/20 rounded-2xl opacity-0 group-focus-within:opacity-100 blur-xl transition-opacity"></div>
+                        <div class="relative">
+                            <i class="fa-solid fa-user absolute left-5 top-1/2 -translate-y-1/2 text-text-sub text-lg group-focus-within:text-primary transition-colors z-10"></i>
+                            <input 
+                                type="text" 
+                                id="loginUsername" 
+                                placeholder="Enter your username" 
+                                class="w-full pl-14 pr-5 py-4 sm:py-5 bg-gray-50 border-2 border-gray-200 rounded-2xl text-base sm:text-lg font-medium focus:outline-none focus:border-primary focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all relative shadow-sm hover:shadow-md"
+                                autocomplete="username"
+                            >
+                        </div>
+                    </div>
+
+                    <!-- Password Input -->
+                    <div class="relative group">
+                        <div class="absolute inset-0 bg-gradient-to-r from-primary/20 to-purple-500/20 rounded-2xl opacity-0 group-focus-within:opacity-100 blur-xl transition-opacity"></div>
+                        <div class="relative">
+                            <i class="fa-solid fa-lock absolute left-5 top-1/2 -translate-y-1/2 text-text-sub text-lg group-focus-within:text-primary transition-colors z-10"></i>
+                            <input 
+                                type="password" 
+                                id="loginPassword" 
+                                placeholder="Enter your password" 
+                                class="w-full pl-14 pr-5 py-4 sm:py-5 bg-gray-50 border-2 border-gray-200 rounded-2xl text-base sm:text-lg font-medium focus:outline-none focus:border-primary focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all relative shadow-sm hover:shadow-md"
+                                autocomplete="current-password"
+                            >
+                        </div>
+                    </div>
+
+                    <!-- Checkbox -->
+                    <div class="flex items-center gap-3 px-2">
+                        <input type="checkbox" id="chkAutoLogout" class="w-5 h-5 text-primary rounded-lg border-2 border-gray-300 focus:ring-4 focus:ring-primary/20 cursor-pointer transition-all">
+                        <label for="chkAutoLogout" class="text-sm sm:text-base text-text-sub cursor-pointer select-none font-medium hover:text-text-main transition-colors">Auto-logout on browser close</label>
+                    </div>
+
+                    <!-- Login Button -->
+                    <button 
+                        id="btnSubmitLogin" 
+                        class="w-full bg-gradient-to-r from-primary via-blue-500 to-blue-600 hover:from-primary-dark hover:via-blue-600 hover:to-blue-700 text-white font-bold py-5 sm:py-6 rounded-2xl shadow-xl shadow-blue-500/30 hover:shadow-2xl hover:shadow-blue-500/40 transition-all duration-300 active:scale-[0.98] text-base sm:text-lg mt-2"
+                    >
+                        <i class="fa-solid fa-right-to-bracket mr-2"></i>Log In to JKChat
+                    </button>
+
+                    <!-- Feedback -->
+                    <div id="loginFeedback" class="text-center text-red-500 text-sm sm:text-base font-semibold min-h-[24px] px-4"></div>
+                </div>
+
+                <!-- Register Form -->
+                <div id="formRegister" class="hidden flex-col gap-5 sm:gap-6">
+                    <!-- Avatar Upload with Premium Design -->
+                    <div class="flex flex-col items-center gap-4 py-3">
+                        <div class="relative group cursor-pointer">
+                            <div class="absolute inset-0 bg-gradient-to-r from-primary to-purple-500 rounded-full opacity-0 group-hover:opacity-20 blur-xl transition-opacity"></div>
+                            <div id="regAvatarPreview" class="relative w-32 h-32 sm:w-36 sm:h-36 rounded-full bg-gradient-to-br from-blue-100 via-blue-50 to-purple-100 border-4 border-dashed border-blue-300 flex items-center justify-center hover:border-primary hover:border-solid hover:scale-105 transition-all duration-300 overflow-hidden shadow-lg group-hover:shadow-xl">
+                                <i class="fa-solid fa-camera text-4xl sm:text-5xl text-blue-400 group-hover:text-primary transition-colors"></i>
+                            </div>
+                        </div>
+                        <input type="file" id="regAvatarInput" accept="image/*" class="hidden">
+                        <p class="text-sm sm:text-base text-text-sub font-medium">Click to upload profile photo</p>
+                    </div>
+
+                    <!-- Username Input -->
+                    <div class="relative group">
+                        <div class="absolute inset-0 bg-gradient-to-r from-primary/20 to-purple-500/20 rounded-2xl opacity-0 group-focus-within:opacity-100 blur-xl transition-opacity"></div>
+                        <div class="relative">
+                            <i class="fa-solid fa-user absolute left-5 top-1/2 -translate-y-1/2 text-text-sub text-lg group-focus-within:text-primary transition-colors z-10"></i>
+                            <input 
+                                type="text" 
+                                id="regUsername" 
+                                placeholder="Choose a username" 
+                                maxlength="15" 
+                                class="w-full pl-14 pr-5 py-4 sm:py-5 bg-gray-50 border-2 border-gray-200 rounded-2xl text-base sm:text-lg font-medium focus:outline-none focus:border-primary focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all relative shadow-sm hover:shadow-md"
+                                autocomplete="username"
+                            >
+                        </div>
+                    </div>
+
+                    <!-- Password Input -->
+                    <div class="relative group">
+                        <div class="absolute inset-0 bg-gradient-to-r from-primary/20 to-purple-500/20 rounded-2xl opacity-opacity-0 group-focus-within:opacity-100 blur-xl transition-opacity"></div>
+                        <div class="relative">
+                            <i class="fa-solid fa-lock absolute left-5 top-1/2 -translate-y-1/2 text-text-sub text-lg group-focus-within:text-primary transition-colors z-10"></i>
+                            <input 
+                                type="password" 
+                                id="regPassword" 
+                                placeholder="Create a strong password (6+ chars)" 
+                                class="w-full pl-14 pr-5 py-4 sm:py-5 bg-gray-50 border-2 border-gray-200 rounded-2xl text-base sm:text-lg font-medium focus:outline-none focus:border-primary focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all relative shadow-sm hover:shadow-md"
+                                autocomplete="new-password"
+                            >
+                        </div>
+                    </div>
+
+                    <!-- Register Button -->
+                    <button 
+                        id="btnSubmitRegister" 
+                        class="w-full bg-gradient-to-r from-primary via-blue-500 to-purple-600 hover:from-primary-dark hover:via-blue-600 hover:to-purple-700 text-white font-bold py-5 sm:py-6 rounded-2xl shadow-xl shadow-blue-500/30 hover:shadow-2xl hover:shadow-purple-500/40 transition-all duration-300 active:scale-[0.98] text-base sm:text-lg mt-2"
+                    >
+                        <i class="fa-solid fa-user-plus mr-2"></i>Create Your Account
+                    </button>
+
+                    <!-- Feedback -->
+                    <div id="regFeedback" class="text-center text-red-500 text-sm sm:text-base font-semibold min-h-[24px] px-4"></div>
+                </div>
+
+                <!-- Footer Note -->
+                <div class="mt-8 pt-6 border-t border-gray-200 text-center">
+                    <p class="text-xs sm:text-sm text-text-sub">
+                        <i class="fa-solid fa-shield-halved mr-1.5 text-primary"></i>
+                        Secure & encrypted communication
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
