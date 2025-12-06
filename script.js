@@ -599,33 +599,57 @@ function sendMessage() {
 function renderMessage(msg) {
     const isMe = msg.uid === currentUser.uid;
     const div = document.createElement('div');
-    div.className = `message ${isMe ? 'sent' : 'received'}`;
+    
+    // Container for the message with proper alignment
+    div.className = `flex ${isMe ? 'justify-end' : 'justify-start'} mb-3`;
     
     let content = '';
 
-    // Reply Block
-    if (msg.replyTo) {
+    if (!isMe) {
+        // Received message with avatar
         content += `
-            <div class="reply-quote">
-                <strong>${escapeHtml(msg.replyTo.name)}</strong>
-                ${escapeHtml(msg.replyTo.text)}
+            <div class="flex gap-2 max-w-[75%]">
+                <img class="w-8 h-8 rounded-full object-cover flex-shrink-0" src="${msg.avatar}" alt="avatar">
+                <div class="flex flex-col">
+                    <span class="text-xs text-text-sub font-semibold mb-1 ml-3">${escapeHtml(msg.user)}</span>
+                    <div class="bg-white border border-gray-200 text-text-main px-4 py-2.5 rounded-[20px] rounded-tl-sm shadow-sm">
+        `;
+    } else {
+        // Sent message (aligned right)
+        content += `
+            <div class="flex flex-col max-w-[75%]">
+                <div class="bg-primary text-white px-4 py-2.5 rounded-[20px] rounded-tr-sm shadow-lg shadow-blue-500/20">
+        `;
+    }
+
+    // Reply quote (if exists)
+    if (msg.replyTo) {
+        const replyBg = isMe ? 'bg-white/20' : 'bg-gray-100';
+        const replyBorder = isMe ? 'border-white/30' : 'border-gray-300';
+        content += `
+            <div class="${replyBg} border-l-4 ${replyBorder} px-3 py-2 rounded mb-2 text-xs">
+                <div class="font-bold opacity-90">${escapeHtml(msg.replyTo.name)}</div>
+                <div class="opacity-75">${escapeHtml(msg.replyTo.text)}</div>
             </div>
         `;
     }
 
-    if (!isMe) {
-        content += `<div class="msg-meta">
-            <img class="msg-avatar" src="${msg.avatar}">
-            <span class="msg-name">${escapeHtml(msg.user)}</span>
-        </div>`;
-    }
+    // Message text
+    content += `<div class="break-words">${escapeHtml(msg.text)}</div>`;
 
+    // Timestamp
     const time = new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    const timeColor = isMe ? 'text-white/70' : 'text-text-sub';
+    content += `<div class="text-[10px] ${timeColor} mt-1 text-right">${time}</div>`;
 
-    content += `
-        ${msg.text}
-        <span class="msg-time">${time}</span>
-    `;
+    // Close message bubble
+    content += `</div>`;
+    
+    // Close container
+    if (!isMe) {
+        content += `</div>`;
+    }
+    content += `</div>`;
 
     div.innerHTML = content;
     div.ondblclick = () => setReply({ id: msg.uid, name: msg.user, text: msg.text });
