@@ -233,6 +233,26 @@ body.dark-mode ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); }
 .btn-delete { background: #ff4444; color: white; width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; margin-top: 10px; }
 .btn-delete:hover { background: #cc0000; }
 
+/* App Layout - Restored */
+.sidebar { width: 300px; background: var(--card-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 50; transition: transform 0.3s ease; }
+.chat-area { flex: 1; display: flex; flex-direction: column; position: relative; width: 100%; height: 100%; background: var(--bg); }
+.chat-header { height: 60px; padding: 0 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--card-bg); z-index: 40; }
+.header-left { display: flex; align-items: center; gap: 12px; }
+.mobile-menu-btn { display: none; font-size: 20px; color: var(--text-main); margin-right: 10px; cursor: pointer; }
+.room-info { display: flex; flex-direction: column; }
+.room-name { font-weight: 700; font-size: 16px; color: var(--text-main); }
+.typing-indicator { font-size: 12px; color: var(--primary); height: 14px; opacity: 0; transition: opacity 0.3s; font-weight: 600; }
+.header-right { display: flex; align-items: center; gap: 15px; }
+
+/* Status Dots */
+.status-dot { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--card-bg); position: absolute; bottom: 2px; right: 2px; }
+.status-dot.online { background: #31a24c; }
+.status-dot.offline { background: #ccc; }
+.member-item { display: flex; align-items: center; padding: 10px; cursor: pointer; border-radius: 8px; transition: 0.2s; gap: 10px; margin-bottom: 2px; }
+.member-item:hover { background: var(--hover); }
+.member-avatar-wrapper { position: relative; width: 36px; height: 36px; }
+.member-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
+
 /* App UI */
 .app-container { display: none; width: 100%; height: 100%; background: var(--card-bg); position: relative; overflow: hidden; }
 .app-container.visible { display: flex; }
