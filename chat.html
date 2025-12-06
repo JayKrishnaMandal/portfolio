@@ -2,274 +2,340 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
-    <meta name="theme-color" content="#18191a" media="(prefers-color-scheme: dark)">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>JKChat</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0065ff', // Enterprise Blue
+                        'primary-dark': '#0747a6',
+                        bg: '#f8f9fa',
+                        'card-bg': '#ffffff',
+                        'text-main': '#172b4d',
+                        'text-sub': '#5e6c84',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=4.5">
-</head>
-<body>
-
-    <div class="error-toast" id="errorToast">Error Message</div>
     
-    <!-- LOADING OVERLAY -->
-    <div id="loadingOverlay" class="loading-overlay">
-        <div class="spinner"></div>
-        <div class="loading-text">Connecting...</div>
+    <!-- Custom CSS (Animations Only) -->
+    <link rel="stylesheet" href="style.css?v=5.0">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-bg text-text-main h-[100dvh] w-full overflow-hidden select-none">
+
+    <!-- Toast -->
+    <div id="errorToast" class="fixed top-5 left-1/2 -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded-full shadow-xl z-[9999] hidden font-semibold text-sm transition-all duration-300">
+        Error Message
     </div>
 
-<!-- 1. AUTH CONTAINER (Tabbed Login/Register) -->
-    <div class="auth-container" id="authScreen">
-        <div class="auth-card">
-            <div class="brand-header">
-                <h1>JKChat</h1>
-                <p>Your World, Connected.</p>
-            </div>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[5000] hidden flex-col justify-center items-center text-white">
+        <div class="animate-spin rounded-full h-10 w-10 border-4 border-white/30 border-t-primary mb-4"></div>
+        <div class="loading-text text-sm font-medium tracking-wide">Processing...</div>
+    </div>
+
+    <!-- 1. AUTH CONTAINER -->
+    <div id="authScreen" class="flex h-full w-full items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-gray-100 p-8 flex flex-col gap-6">
             
-            <div class="auth-tabs">
-                <button class="auth-tab active" id="tabLogin">Log In</button>
-                <button class="auth-tab" id="tabRegister">Sign Up</button>
+            <!-- Header -->
+            <div class="text-center">
+                <h1 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-400 mb-2">JKChat</h1>
+                <p class="text-text-sub text-sm">Enterprise Team Communication</p>
             </div>
 
-            <!-- LOGIN FORM -->
-            <div class="auth-form" id="formLogin">
-                <div class="input-group">
-                    <i class="fa-solid fa-user"></i>
-                    <input type="text" id="loginUsername" placeholder="Username" autocomplete="username">
-                </div>
-                <div class="input-group">
-                    <i class="fa-solid fa-lock"></i>
-                    <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password">
-                </div>
-                <div class="form-options">
-                    <label class="custom-checkbox">
-                        <input type="checkbox" id="chkAutoLogout"> 
-                        <span>Auto-logout on exit</span>
-                    </label>
-                </div>
-                <button class="btn-primary-block" id="btnSubmitLogin">Log In</button>
-                <div id="loginFeedback" class="form-feedback"></div>
+            <!-- Tabs -->
+            <div class="flex bg-gray-100 p-1 rounded-xl">
+                <button id="tabLogin" class="flex-1 py-2.5 text-sm font-semibold text-text-sub rounded-lg transition-all active bg-white text-text-main shadow-sm">Log In</button>
+                <button id="tabRegister" class="flex-1 py-2.5 text-sm font-semibold text-text-sub rounded-lg transition-all hover:text-text-main">Sign Up</button>
             </div>
 
-            <!-- REGISTER FORM -->
-            <div class="auth-form" id="formRegister" style="display:none;">
-                <div class="profile-upload-section">
-                    <div class="avatar-preview-large" id="regAvatarPreview">
-                        <i class="fa-solid fa-camera"></i>
+            <!-- Login Form -->
+            <div id="formLogin" class="flex flex-col gap-4">
+                <div class="relative">
+                    <i class="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-text-sub text-sm"></i>
+                    <input type="text" id="loginUsername" placeholder="Username" class="w-full pl-10 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary focus:ring-4 focus:ring-blue-500/10 transition-all">
+                </div>
+                <div class="relative">
+                    <i class="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-text-sub text-sm"></i>
+                    <input type="password" id="loginPassword" placeholder="Password" class="w-full pl-10 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary focus:ring-4 focus:ring-blue-500/10 transition-all">
+                </div>
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" id="chkAutoLogout" class="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary">
+                    <label for="chkAutoLogout" class="text-xs text-text-sub cursor-pointer">Auto-logout on exit</label>
+                </div>
+                <button id="btnSubmitLogin" class="w-full bg-primary hover:bg-primary-dark text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-500/30 transition-all active:scale-[0.98]">Log In</button>
+                <div id="loginFeedback" class="text-center text-red-500 text-xs font-semibold h-4"></div>
+            </div>
+
+            <!-- Register Form -->
+            <div id="formRegister" class="hidden flex flex-col gap-4">
+                <!-- Avatar Upload -->
+                <div class="flex flex-col items-center gap-2 mb-2">
+                    <div id="regAvatarPreview" class="w-24 h-24 rounded-full bg-gray-50 border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-primary hover:bg-blue-50 transition-all overflow-hidden relative group">
+                        <i class="fa-solid fa-camera text-2xl text-gray-400 group-hover:text-primary transition-colors"></i>
                     </div>
-                    <input type="file" id="regAvatarInput" accept="image/*" style="display:none;">
-                    <p class="hint">Tap to upload profile pic</p>
+                    <input type="file" id="regAvatarInput" accept="image/*" class="hidden">
+                    <p class="text-xs text-text-sub">Tap to upload photo</p>
                 </div>
 
-                <div class="input-group">
-                    <i class="fa-solid fa-user"></i>
-                    <input type="text" id="regUsername" placeholder="Choose Username" maxlength="15" autocomplete="username">
+                <div class="relative">
+                    <i class="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-text-sub text-sm"></i>
+                    <input type="text" id="regUsername" placeholder="Choose Username" maxlength="15" class="w-full pl-10 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary focus:ring-4 focus:ring-blue-500/10 transition-all">
                 </div>
-                <div class="input-group">
-                    <i class="fa-solid fa-lock"></i>
-                    <input type="password" id="regPassword" placeholder="Choose Password" autocomplete="new-password">
+                <div class="relative">
+                    <i class="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-text-sub text-sm"></i>
+                    <input type="password" id="regPassword" placeholder="Choose Password (6+ chars)" class="w-full pl-10 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary focus:ring-4 focus:ring-blue-500/10 transition-all">
                 </div>
-                <button class="btn-primary-block" id="btnSubmitRegister">Create Account</button>
-                <div id="regFeedback" class="form-feedback"></div>
+                <button id="btnSubmitRegister" class="w-full bg-primary hover:bg-primary-dark text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-500/30 transition-all active:scale-[0.98]">Create Account</button>
+                <div id="regFeedback" class="text-center text-red-500 text-xs font-semibold h-4"></div>
             </div>
         </div>
     </div>
 
     <!-- 2. DASHBOARD CONTAINER -->
-    <div class="dashboard-container" id="dashboardScreen" style="display:none;">
-        <header class="dash-header">
-            <div class="user-profile-summary" id="btnDashSettings">
-                <img id="dashUserAvatar" src="" class="dash-avatar">
-                <div class="dash-user-info">
-                    <h3 id="dashUserName">User</h3>
-                    <span>Online</span>
+    <div id="dashboardScreen" class="hidden flex-col h-full bg-bg">
+        <!-- Header -->
+        <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shadow-sm z-10 shrink-0">
+            <div id="btnDashSettings" class="flex items-center gap-3 cursor-pointer p-1 rounded-lg hover:bg-gray-50 transition-colors">
+                <img id="dashUserAvatar" src="" class="w-10 h-10 rounded-full border border-gray-200 object-cover">
+                <div class="flex flex-col">
+                    <h3 id="dashUserName" class="text-sm font-bold text-text-main">User</h3>
+                    <span class="text-xs text-green-500 font-semibold flex items-center gap-1"><span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span> Online</span>
                 </div>
             </div>
-            <button class="btn-icon" id="btnDashLogout" title="Logout"><i class="fa-solid fa-right-from-bracket"></i></button>
+            <button id="btnDashLogout" class="w-10 h-10 flex items-center justify-center rounded-full text-text-sub hover:bg-gray-100 hover:text-red-500 transition-colors">
+                <i class="fa-solid fa-right-from-bracket"></i>
+            </button>
         </header>
-        
-        <div class="dash-body custom-scrollbar">
-            <div class="dash-section-header">
-                <h2>Your Rooms</h2>
-                <button class="btn-sm-primary" id="btnOpenCreateRoom"><i class="fa-solid fa-plus"></i> New Room</button>
-            </div>
+
+        <!-- Body -->
+        <div class="flex-1 overflow-y-auto p-6 max-w-5xl mx-auto w-full">
             
-            <div class="rooms-grid" id="roomsList">
-                <!-- Room Cards Injected Here -->
-                <div class="empty-state">
-                    <i class="fa-regular fa-comments"></i>
-                    <p>You haven't joined any rooms yet.</p>
-                </div>
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-bold text-text-main">Your Rooms</h2>
+                <button id="btnOpenCreateRoom" class="bg-primary hover:bg-primary-dark text-white px-5 py-2.5 rounded-full text-sm font-semibold shadow-md shadow-blue-500/20 transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-plus"></i> New Room
+                </button>
             </div>
 
-            <div class="join-section">
-                <h3>Join Existing Room</h3>
-                <div class="join-input-row">
-                    <input type="text" id="dashJoinName" placeholder="Room Name">
-                    <input type="password" id="dashJoinKey" placeholder="Room Key">
-                    <button id="btnDashJoin"><i class="fa-solid fa-arrow-right"></i></button>
-                </div>
+            <!-- Grid -->
+            <div id="roomsList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+                <!-- Room Items Injected Here -->
+                 <div class="col-span-full border-2 border-dashed border-gray-300 rounded-2xl p-12 text-center text-text-sub bg-white">
+                    <i class="fa-regular fa-comments text-4xl mb-3 text-gray-300"></i>
+                    <p class="font-medium">No rooms yet. Join or create one!</p>
+                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- CREATE ROOM MODAL -->
-    <div class="modal-overlay" id="createModal">
-        <div class="modal-card">
-            <div class="modal-header">
-                <h2>Create Room</h2>
-                <button class="close-modal" id="btnCloseCreate">&times;</button>
-            </div>
-            <div class="modal-body custom-scrollbar">
-                <label class="modal-label">Room Icon</label>
-                
-                <!-- Custom Upload Area -->
-                <div class="room-upload-area" id="roomIconUpload">
-                    <div class="icon-preview" id="roomIconPreview">
-                        <i class="fa-solid fa-cloud-arrow-up"></i>
-                    </div>
-                    <div class="upload-text">
-                        <span>Upload Image</span>
-                        <small>or select a preset below</small>
-                    </div>
-                    <input type="file" id="roomIconInput" accept="image/*" hidden>
-                </div>
-
-                <!-- Presets Grid -->
-                <div class="avatar-grid small-grid" id="createRoomAvatarGrid"></div>
-
-                <div class="input-stack">
-                    <div>
-                        <label class="modal-label">Room Name</label>
-                        <input type="text" class="modal-input" id="newRoomName" placeholder="e.g. The Hangout" maxlength="20">
-                    </div>
-                    <div>
-                        <label class="modal-label">Room Password</label>
-                        <input type="password" class="modal-input" id="newRoomKey" placeholder="Required for others to join">
-                    </div>
-                </div>
-
-                <div class="modal-actions">
-                    <button class="modal-btn" id="btnConfirmCreate">Create & Join</button>
-                    <button class="modal-btn-secondary" id="btnCancelCreate">Cancel</button>
+            <!-- Join Section -->
+            <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-1 h-full bg-primary"></div>
+                <h3 class="text-lg font-bold text-text-main mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-door-open text-primary"></i> Join Existing Room
+                </h3>
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <input type="text" id="dashJoinName" placeholder="Room Name" class="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary focus:ring-4 focus:ring-blue-500/10">
+                    <input type="password" id="dashJoinKey" placeholder="Room Key" class="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary focus:ring-4 focus:ring-blue-500/10">
+                    <button id="btnDashJoin" class="w-14 bg-gray-900 text-white rounded-xl hover:bg-black transition-all flex items-center justify-center shadow-lg">
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ROOM SETTINGS MODAL -->
-    <div class="modal-overlay" id="roomSettingsModal">
-        <div class="modal-card">
-            <div class="modal-header">
-                <h2>Room Settings</h2>
-                <button class="close-modal" id="btnCloseRoomSettings">&times;</button>
-            </div>
-            <div class="modal-body">
-                <label class="modal-label">Room Name</label>
-                <input type="text" class="modal-input" id="editRoomName" placeholder="Room Name">
-                
-                <label class="modal-label">Room Password</label>
-                <input type="text" class="modal-input" id="editRoomKey" placeholder="Current Password">
-                
-                <button class="modal-btn" id="btnSaveRoomSettings">Save Changes</button>
-
-                <div class="divider"></div>
-
-                <label class="modal-label" style="color:#ff4444;">Danger Zone</label>
-                <button class="modal-btn" id="btnDeleteRoom" style="background: #ff4444;">Delete Room</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- USER SETTINGS MODAL -->
-    <div class="modal-overlay" id="userSettingsModal">
-        <div class="modal-card">
-            <div class="modal-header">
-                <h2>Edit Profile</h2>
-                <button class="close-modal" id="btnCloseUserSettings">&times;</button>
-            </div>
-            <div class="modal-body custom-scrollbar">
-                <div class="profile-upload-section">
-                    <div class="avatar-preview-large" id="editUserAvatarPreview">
-                        <img src="" id="editUserAvatarImg">
-                        <div class="avatar-overlay"><i class="fa-solid fa-camera"></i></div>
-                    </div>
-                    <input type="file" id="editUserAvatarInput" accept="image/*" hidden>
-                </div>
-
-                <label class="modal-label">Display Name</label>
-                <input type="text" class="modal-input" id="editUserName">
-
-                <label class="modal-label">New Password (Optional)</label>
-                <input type="password" class="modal-input" id="editUserPass" placeholder="Leave empty to keep current">
-
-                <button class="modal-btn" id="btnSaveUserProfile">Save Profile</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 2. MESSENGER APP UI -->
-    <div class="app-container" id="app">
+    <!-- 3. MESSENGER APP UI -->
+    <div id="app" class="hidden h-full w-full bg-white flex-col md:flex-row">
         
-        <!-- Sidebar Overlay (Mobile) -->
-        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+        <!-- Mobile Sidebar Overlay -->
+        <div class="sidebar-overlay fixed inset-0 bg-black/50 backdrop-blur-sm z-40 hidden md:hidden"></div>
 
         <!-- Sidebar -->
-        <aside class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <div style="display:flex; align-items:center; gap:12px;">
-                    <img id="sidebarRoomIcon" class="room-icon-small" src=""> 
-                    <span id="sidebarRoomNameDisplay">Room</span>
+        <aside id="sidebar" class="fixed md:relative top-0 left-0 h-full w-[80%] max-w-[320px] md:w-[320px] bg-white border-r border-gray-200 z-50 flex flex-col transition-transform duration-300 -translate-x-full md:translate-x-0 shadow-2xl md:shadow-none">
+            <div class="h-16 border-b border-gray-200 flex items-center justify-between px-4 shrink-0">
+                <div class="flex items-center gap-3">
+                    <img id="sidebarRoomIcon" class="w-10 h-10 rounded-full border border-gray-200 object-cover" src="">
+                    <span id="sidebarRoomNameDisplay" class="font-bold text-text-main truncate max-w-[150px]">Room</span>
                 </div>
-                <button id="btnDarkMode" aria-label="Toggle Dark Mode"><i class="fa-solid fa-moon"></i></button>
+                <button id="btnDarkMode" class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-text-main hover:bg-gray-200 transition-colors">
+                    <i class="fa-solid fa-moon"></i>
+                </button>
             </div>
-            <div class="contact-list" id="memberList">
-                <!-- Members injected here -->
+            
+            <div id="memberList" class="flex-1 overflow-y-auto p-2 scrollbar-hide">
+                <!-- Members -->
             </div>
-            <div class="sidebar-footer">
-                <button id="btnLogout"> <i class="fa-solid fa-right-from-bracket"></i> Log Out</button>
+
+            <div class="p-4 border-t border-gray-200 bg-gray-50">
+                <button id="btnLogout" class="w-full py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-semibold text-text-main hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-right-from-bracket"></i> Leave Room
+                </button>
             </div>
         </aside>
 
         <!-- Chat Area -->
-        <main class="chat-area">
-            <header class="chat-header">
-                <div class="header-left">
-                    <i class="fa-solid fa-bars mobile-menu-btn" id="btnMobileMenu" aria-label="Menu"></i>
-                    <img id="headerRoomIcon" class="room-icon-small" src="" style="display:none;">
-                    <div class="room-info">
-                        <div class="room-name" id="headerRoomName">Room Name</div>
-                        <div class="typing-indicator" id="typingIndicator"></div>
+        <main class="flex-1 flex flex-col h-full relative bg-gray-50 w-full min-w-0">
+            <!-- Header -->
+            <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 shadow-sm z-30 shrink-0">
+                <div class="flex items-center gap-3">
+                    <i id="btnMobileMenu" class="fa-solid fa-bars text-xl md:hidden cursor-pointer p-2"></i>
+                    <img id="headerRoomIcon" class="w-10 h-10 rounded-full border border-gray-200 hidden md:block object-cover">
+                    <div>
+                        <div id="headerRoomName" class="font-bold text-text-main text-lg leading-tight">Room Name</div>
+                        <div id="typingIndicator" class="text-xs text-primary font-medium h-4"></div>
                     </div>
                 </div>
-                <div class="header-right">
-                    <!-- Settings Button (Hidden by default, shown for Admin) -->
-                    <i class="fa-solid fa-gear" id="btnSettings" style="font-size:20px; color:var(--text-sub); cursor:pointer; display:none;"></i>
-                </div>
+                <i id="btnSettings" class="fa-solid fa-gear text-text-sub text-lg cursor-pointer hover:text-text-main transition-colors p-2 hidden"></i>
             </header>
 
-            <div class="messages-container" id="messages"></div>
+            <!-- Messages -->
+            <div id="messages" class="flex-1 overflow-y-auto p-4 flex flex-col gap-3 scroll-smooth"></div>
 
-            <div class="chat-input-area">
-                <div class="reply-preview" id="replyPreview">
-                    <div class="reply-info">
-                        <span class="reply-label">Replying to <b id="replyTarget">Name</b></span>
-                        <span class="reply-text" id="replyContent">Message content...</span>
+            <!-- Input Area -->
+            <div class="p-3 bg-white border-t border-gray-200 z-30 pb-[env(safe-area-inset-bottom)]">
+                <!-- Reply Preview -->
+                <div id="replyPreview" class="hidden items-center justify-between mb-2 p-3 bg-gray-50 rounded-xl border border-blue-100 border-l-4 border-l-primary">
+                    <div class="flex-1 border-l-2 border-primary pl-3">
+                        <span class="block text-xs font-bold text-primary mb-0.5">Replying to <span id="replyTarget">Name</span></span>
+                        <span id="replyContent" class="text-xs text-text-sub truncate block">Message...</span>
                     </div>
-                    <button class="close-reply" id="btnCloseReply">&times;</button>
+                    <button id="btnCloseReply" class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs hover:bg-gray-300">&times;</button>
                 </div>
-                <div class="chat-input-wrapper">
-                    <div class="emoji-btn-wrapper">
-                        <i class="fa-regular fa-face-smile" id="btnEmoji"></i>
-                        <div id="emojiPickerContainer"></div>
+
+                <div class="flex items-end gap-2 max-w-4xl mx-auto w-full">
+                    <div class="flex-1 bg-gray-100 rounded-[24px] flex items-center px-2 py-1 border border-transparent focus-within:bg-white focus-within:border-primary focus-within:ring-2 focus-within:ring-blue-500/10 transition-all">
+                        <button id="btnEmoji" class="p-2 text-text-sub hover:text-primary transition-colors text-xl relative">
+                            <i class="fa-regular fa-face-smile"></i>
+                            <div id="emojiPickerContainer" class="absolute bottom-12 left-0 hidden z-50"></div>
+                        </button>
+                        <input type="text" id="msgInput" placeholder="Message..." class="flex-1 bg-transparent border-none focus:outline-none focus:ring-0 p-2 text-text-main placeholder-gray-400" autocomplete="off" maxlength="1000">
                     </div>
-                    <input type="text" class="chat-input" id="msgInput" placeholder="Message..." autocomplete="off" maxlength="1000">
+                    <button id="btnSend" class="w-11 h-11 rounded-full bg-primary text-white flex items-center justify-center shadow-lg shadow-blue-500/30 hover:bg-primary-dark hover:scale-105 active:scale-95 transition-all">
+                        <i class="fa-solid fa-paper-plane text-sm"></i>
+                    </button>
                 </div>
-                <button class="send-btn" id="btnSend"><i class="fa-solid fa-paper-plane"></i></button>
             </div>
         </main>
+    </div>
+
+    <!-- MODALS (Tailwind) -->
+    
+    <!-- Create Room Modal -->
+    <div id="createModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[2000] hidden items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden animate-[scaleIn_0.2s_ease-out]">
+            <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                <h2 class="font-bold text-lg text-text-main">Create Room</h2>
+                <button id="btnCloseCreate" class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-text-sub hover:bg-gray-300 transition-colors">&times;</button>
+            </div>
+            <div class="p-6 max-h-[80vh] overflow-y-auto">
+                <div id="roomIconUpload" class="bg-gray-50 border-2 border-dashed border-gray-200 hover:border-primary hover:bg-blue-50/30 rounded-xl p-6 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all mb-6 group">
+                    <div id="roomIconPreview" class="w-20 h-20 rounded-2xl bg-white border border-gray-200 shadow-sm flex items-center justify-center overflow-hidden">
+                        <i class="fa-solid fa-cloud-arrow-up text-3xl text-gray-300 group-hover:text-primary transition-colors"></i>
+                    </div>
+                    <div class="text-center">
+                        <span class="block text-sm font-bold text-primary">Upload Icon</span>
+                        <span class="text-[10px] text-text-sub">or select preset below</span>
+                    </div>
+                    <input type="file" id="roomIconInput" accept="image/*" class="hidden">
+                </div>
+
+                <div id="createRoomAvatarGrid" class="grid grid-cols-4 gap-2 mb-6"></div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-text-sub uppercase mb-1">Room Name</label>
+                        <input type="text" id="newRoomName" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-text-sub uppercase mb-1">Passkey</label>
+                        <input type="password" id="newRoomKey" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary">
+                    </div>
+                </div>
+
+                <div class="flex gap-3 mt-8">
+                    <button id="btnCancelCreate" class="flex-1 py-3 bg-gray-100 text-text-main font-bold rounded-xl hover:bg-gray-200 transition-colors">Cancel</button>
+                    <button id="btnConfirmCreate" class="flex-1 py-3 bg-primary text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 hover:bg-primary-dark transition-colors">Create Room</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Room Settings Modal -->
+    <div id="roomSettingsModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[2000] hidden items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden">
+            <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                <h2 class="font-bold text-lg text-text-main">Room Settings</h2>
+                <button id="btnCloseRoomSettings" class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-text-sub hover:bg-gray-300">&times;</button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                     <label class="block text-xs font-bold text-text-sub uppercase mb-1">Room Name</label>
+                     <input type="text" id="editRoomName" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary">
+                </div>
+                <div>
+                     <label class="block text-xs font-bold text-text-sub uppercase mb-1">Passkey</label>
+                     <input type="text" id="editRoomKey" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary">
+                </div>
+                <button id="btnSaveRoomSettings" class="w-full py-3 bg-primary text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 hover:bg-primary-dark transition-colors">Save Changes</button>
+                
+                <div class="h-px bg-gray-200 my-4"></div>
+                
+                <label class="block text-xs font-bold text-red-500 uppercase mb-2">Danger Zone</label>
+                <button id="btnDeleteRoom" class="w-full py-3 bg-red-50 text-red-600 border border-red-200 font-bold rounded-xl hover:bg-red-100 transition-colors">Delete Room</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Settings Modal -->
+    <div id="userSettingsModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[2000] hidden items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden">
+             <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                <h2 class="font-bold text-lg text-text-main">Edit Profile</h2>
+                <button id="btnCloseUserSettings" class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-text-sub hover:bg-gray-300">&times;</button>
+            </div>
+            <div class="p-6">
+                <div class="flex justify-center mb-6">
+                    <div id="editUserAvatarPreview" class="relative group cursor-pointer">
+                        <img id="editUserAvatarImg" class="w-24 h-24 rounded-full object-cover border-2 border-gray-200">
+                        <div class="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <i class="fa-solid fa-camera text-white"></i>
+                        </div>
+                    </div>
+                </div>
+                <input type="file" id="editUserAvatarInput" accept="image/*" class="hidden">
+                
+                <div class="space-y-4">
+                     <div>
+                        <label class="block text-xs font-bold text-text-sub uppercase mb-1">Display Name</label>
+                        <input type="text" id="editUserName" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-text-sub uppercase mb-1">New Password (Optional)</label>
+                        <input type="password" id="editUserPass" placeholder="Leave empty to keep current" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary">
+                    </div>
+                </div>
+                <button id="btnSaveUserProfile" class="w-full mt-6 py-3 bg-primary text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 hover:bg-primary-dark transition-colors">Save Profile</button>
+            </div>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/picmo@latest/dist/umd/index.js"></script>
