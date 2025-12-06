@@ -823,8 +823,11 @@ function setupEventListeners() {
         if(i===0) img.classList.add('selected');
     }
 
-    // Custom Upload Click
-    document.getElementById('roomIconUpload').onclick = () => roomIconInput.click();
+    // Custom Upload Click (with null check)
+    const uploadArea = document.getElementById('roomIconUpload');
+    if (uploadArea) {
+        uploadArea.onclick = () => roomIconInput.click();
+    }
     
     // Handle File Change
     roomIconInput.onchange = async (e) => {
