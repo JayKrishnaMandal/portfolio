@@ -236,32 +236,59 @@
                 </div>
             </div>
         </main>
-                        <i class="fa-solid fa-cloud-arrow-up text-3xl text-gray-300 group-hover:text-primary transition-colors"></i>
+    </div>
+
+    <!-- MODALS (Tailwind) -->
+    
+    <!-- Create Room Modal -->
+    <div id="createModal" class="fixed inset-0 bg-gray-900/60 backdrop-blur-md z-[2000] hidden items-center justify-center p-3 sm:p-4 transition-all duration-300">
+        <div class="bg-white w-full max-w-[95%] sm:max-w-sm rounded-[24px] shadow-2xl transform scale-100 animate-[fadeInUp_0.3s_ease-out] overflow-hidden border border-white/20">
+            <!-- Header -->
+            <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/80">
+                <div>
+                    <h2 class="font-bold text-xl text-text-main tracking-tight">Create Room</h2>
+                    <p class="text-xs text-text-sub mt-0.5">Setup a new space for your team</p>
+                </div>
+                <button id="btnCloseCreate" class="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-text-sub hover:bg-red-50 hover:text-red-500 hover:border-red-100 transition-all shadow-sm">&times;</button>
+            </div>
+            
+            <!-- Body -->
+            <div class="p-6 max-h-[75vh] overflow-y-auto custom-scrollbar">
+                
+                <!-- Upload Area -->
+                <div id="roomIconUpload" class="group relative bg-gradient-to-b from-blue-50/50 to-transparent border-2 border-dashed border-blue-200 hover:border-primary rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer transition-all duration-300 mb-6">
+                    <div id="roomIconPreview" class="w-20 h-20 rounded-2xl bg-white shadow-md flex items-center justify-center overflow-hidden mb-3 group-hover:scale-110 transition-transform duration-300 border border-gray-100">
+                        <i class="fa-solid fa-cloud-arrow-up text-3xl text-blue-300 group-hover:text-primary transition-colors"></i>
                     </div>
-                    <div class="text-center">
-                        <span class="block text-sm font-bold text-primary">Upload Icon</span>
-                        <span class="text-[10px] text-text-sub">or select preset below</span>
-                    </div>
+                    <span class="text-sm font-bold text-text-main group-hover:text-primary transition-colors">Upload Room Icon</span>
+                    <span class="text-[10px] text-text-sub mt-1">Supports JPG, PNG (Max 2MB)</span>
                     <input type="file" id="roomIconInput" accept="image/*" class="hidden">
+                    
+                    <!-- Hover Effect overlay -->
+                    <div class="absolute inset-0 bg-primary/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
                 </div>
 
-                <div id="createRoomAvatarGrid" class="grid grid-cols-4 gap-2 mb-6"></div>
+                <!-- Presets -->
+                <label class="block text-xs font-bold text-text-sub uppercase mb-3 tracking-wider">Or Choose a Style</label>
+                <div id="createRoomAvatarGrid" class="grid grid-cols-4 gap-3 mb-6"></div>
 
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-bold text-text-sub uppercase mb-1">Room Name</label>
-                        <input type="text" id="newRoomName" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary">
+                <!-- Inputs -->
+                <div class="space-y-5">
+                    <div class="relative group">
+                        <input type="text" id="newRoomName" placeholder=" " class="peer w-full px-4 pt-5 pb-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:bg-white focus:border-primary focus:ring-4 focus:ring-blue-500/10 transition-all">
+                        <label class="absolute left-4 top-3 text-[10px] font-bold text-text-sub uppercase peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-xs peer-placeholder-shown:text-gray-400 transition-all pointer-events-none">Room Name</label>
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-text-sub uppercase mb-1">Passkey</label>
-                        <input type="password" id="newRoomKey" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary">
+                    <div class="relative group">
+                        <input type="password" id="newRoomKey" placeholder=" " class="peer w-full px-4 pt-5 pb-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:bg-white focus:border-primary focus:ring-4 focus:ring-blue-500/10 transition-all">
+                        <label class="absolute left-4 top-3 text-[10px] font-bold text-text-sub uppercase peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-xs peer-placeholder-shown:text-gray-400 transition-all pointer-events-none">Secret Key</label>
                     </div>
                 </div>
+            </div>
 
-                <div class="flex gap-3 mt-8">
-                    <button id="btnCancelCreate" class="flex-1 py-3 bg-gray-100 text-text-main font-bold rounded-xl hover:bg-gray-200 transition-colors">Cancel</button>
-                    <button id="btnConfirmCreate" class="flex-1 py-3 bg-primary text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 hover:bg-primary-dark transition-colors">Create Room</button>
-                </div>
+            <!-- Footer -->
+            <div class="p-4 border-t border-gray-100 bg-gray-50 flex gap-3">
+                <button id="btnCancelCreate" class="flex-1 py-3 bg-white border border-gray-200 text-text-main font-bold rounded-xl hover:bg-gray-50 transition-colors shadow-sm">Cancel</button>
+                <button id="btnConfirmCreate" class="flex-1 py-3 bg-gradient-to-r from-primary to-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all">Create Room</button>
             </div>
         </div>
     </div>
