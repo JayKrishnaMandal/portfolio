@@ -877,14 +877,20 @@ function setupEventListeners() {
     // Chat
     document.getElementById('btnSend').onclick = sendMessage;
     el.msgInput.onkeypress = (e) => { if(e.key === 'Enter') sendMessage(); };
+    
+    // Mobile Menu with proper classList
     document.getElementById('btnMobileMenu').onclick = () => {
         el.sidebar.classList.add('active');
-        if(el.sidebarOverlay) el.sidebarOverlay.style.display = 'block';
+        if(el.sidebarOverlay) {
+            el.sidebarOverlay.classList.remove('hidden');
+            el.sidebarOverlay.classList.add('active');
+        }
     };
     if(el.sidebarOverlay) {
         el.sidebarOverlay.onclick = () => {
             el.sidebar.classList.remove('active');
-            el.sidebarOverlay.style.display = 'none';
+            el.sidebarOverlay.classList.add('hidden');
+            el.sidebarOverlay.classList.remove('active');
         };
     }
     document.getElementById('btnDarkMode').onclick = () => toggleDarkMode();
