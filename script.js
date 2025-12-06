@@ -177,44 +177,6 @@ function setupEvents() {
             e.stopPropagation();
             if(!picker && el.emojiPickerContainer) {
                 picker = picmo.createPicker({ rootElement: el.emojiPickerContainer, itemsPerRow: 8, showRecents: false });
-                picker.addEventListener('emoji:select', selection => {
-                    el.msgInput.value += selection.emoji;
-                    el.msgInput.focus();
-                    handleTyping();
-                });
-            }
-            if(el.emojiPickerContainer) {
-                const isHidden = el.emojiPickerContainer.style.display === 'none' || el.emojiPickerContainer.style.display === '';
-                el.emojiPickerContainer.style.display = isHidden ? 'block' : 'none';
-            }
-        });
-    }
-    document.addEventListener('click', (e) => {
-        if(el.emojiPickerContainer && !el.emojiPickerContainer.contains(e.target) && e.target !== el.btnEmoji) {
-            el.emojiPickerContainer.style.display = 'none';
-        }
-    });
-
-    // Notification Permission
-    document.addEventListener('click', () => {
-        if (Notification.permission === 'default') Notification.requestPermission();
-    }, { once: true });
-}
-
-function logout() {
-    localStorage.removeItem('chat_session');
-    location.reload();
-}
-
-function setLoading(is, txt="Loading...") {
-    if(!el.loadingOverlay) return;
-    if(is) { el.loadingOverlay.querySelector('.loading-text').textContent = txt; el.loadingOverlay.style.display = 'flex'; }
-    else el.loadingOverlay.style.display = 'none';
-}
-function sanitizeRoom(name) { return name.replace(/[.#$\[\]]/g, "_"); }
-function showError(msg) {
-    const toast = document.getElementById('errorToast');
-    if(toast) { toast.innerText = msg; toast.style.display = 'block'; setTimeout(() => toast.style.display = 'none', 3000); }
     else alert(msg);
 }
 

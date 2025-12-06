@@ -20,66 +20,119 @@
         <div class="loading-text">Connecting...</div>
     </div>
 
-    <!-- 1. LOGIN WRAPPER -->
-    <div class="login-wrapper" id="loginScreen">
-        <div class="login-content">
-            <div class="brand-section">
+<!-- 1. AUTH CONTAINER (Tabbed Login/Register) -->
+    <div class="auth-container" id="authScreen">
+        <div class="auth-card">
+            <div class="brand-header">
                 <h1>JKChat</h1>
-                <p>Connect with anything,<br>anytime, anywhere.</p>
+                <p>Your World, Connected.</p>
+            </div>
+            
+            <div class="auth-tabs">
+                <button class="auth-tab active" id="tabLogin">Log In</button>
+                <button class="auth-tab" id="tabRegister">Sign Up</button>
             </div>
 
-            <div class="card-container">
-                <div class="login-card">
-                    <div class="avatar-selection">
-                        <p>Choose Your Character</p>
-                        <div class="avatar-grid" id="loginAvatarGrid">
-                            <!-- Injected by JS -->
-                        </div>
-                    </div>
+            <!-- LOGIN FORM -->
+            <div class="auth-form" id="formLogin">
+                <div class="input-group">
+                    <i class="fa-solid fa-user"></i>
+                    <input type="text" id="loginUsername" placeholder="Username" autocomplete="username">
+                </div>
+                <div class="input-group">
+                    <i class="fa-solid fa-lock"></i>
+                    <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password">
+                </div>
+                <div class="form-options">
+                    <label class="custom-checkbox">
+                        <input type="checkbox" id="chkAutoLogout"> 
+                        <span>Auto-logout on exit</span>
+                    </label>
+                </div>
+                <button class="btn-primary-block" id="btnSubmitLogin">Log In</button>
+                <div id="loginFeedback" class="form-feedback"></div>
+            </div>
 
-                    <input type="text" class="login-input" id="joinUser" placeholder="Your Name" autocomplete="off" maxlength="20">
-                    <input type="text" class="login-input" id="joinRoom" placeholder="Room Name" autocomplete="off" maxlength="20">
-                    <input type="password" class="login-input" id="joinKey" placeholder="Private Key (Password)">
-                    
-                    <button class="btn-login" id="btnLogin">Log In</button>
-                    <div class="divider"></div>
-                    <button class="btn-create" id="btnOpenCreate">Create New Room</button>
+            <!-- REGISTER FORM -->
+            <div class="auth-form" id="formRegister" style="display:none;">
+                <div class="profile-upload-section">
+                    <div class="avatar-preview-large" id="regAvatarPreview">
+                        <i class="fa-solid fa-camera"></i>
+                    </div>
+                    <input type="file" id="regAvatarInput" accept="image/*" style="display:none;">
+                    <p class="hint">Tap to upload profile pic</p>
+                </div>
+
+                <div class="input-group">
+                    <i class="fa-solid fa-user"></i>
+                    <input type="text" id="regUsername" placeholder="Choose Username" maxlength="15" autocomplete="username">
+                </div>
+                <div class="input-group">
+                    <i class="fa-solid fa-lock"></i>
+                    <input type="password" id="regPassword" placeholder="Choose Password" autocomplete="new-password">
+                </div>
+                <button class="btn-primary-block" id="btnSubmitRegister">Create Account</button>
+                <div id="regFeedback" class="form-feedback"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. DASHBOARD CONTAINER -->
+    <div class="dashboard-container" id="dashboardScreen" style="display:none;">
+        <header class="dash-header">
+            <div class="user-profile-summary" id="btnDashSettings">
+                <img id="dashUserAvatar" src="" class="dash-avatar">
+                <div class="dash-user-info">
+                    <h3 id="dashUserName">User</h3>
+                    <span>Online</span>
+                </div>
+            </div>
+            <button class="btn-icon" id="btnDashLogout" title="Logout"><i class="fa-solid fa-right-from-bracket"></i></button>
+        </header>
+        
+        <div class="dash-body custom-scrollbar">
+            <div class="dash-section-header">
+                <h2>Your Rooms</h2>
+                <button class="btn-sm-primary" id="btnOpenCreateRoom"><i class="fa-solid fa-plus"></i> New Room</button>
+            </div>
+            
+            <div class="rooms-grid" id="roomsList">
+                <!-- Room Cards Injected Here -->
+                <div class="empty-state">
+                    <i class="fa-regular fa-comments"></i>
+                    <p>You haven't joined any rooms yet.</p>
+                </div>
+            </div>
+
+            <div class="join-section">
+                <h3>Join Existing Room</h3>
+                <div class="join-input-row">
+                    <input type="text" id="dashJoinName" placeholder="Room Name">
+                    <input type="password" id="dashJoinKey" placeholder="Room Key">
+                    <button id="btnDashJoin"><i class="fa-solid fa-arrow-right"></i></button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- CREATE MODAL -->
+    <!-- CREATE ROOM MODAL -->
     <div class="modal-overlay" id="createModal">
         <div class="modal-card">
             <div class="modal-header">
-                <div><h2>Sign Up</h2><p style="font-size:12px; color:var(--text-sub); margin:0;">Create a secure space.</p></div>
-                <button class="close-modal" id="btnCloseModal">&times;</button>
+                <h2>Create Room</h2>
+                <button class="close-modal" id="btnCloseCreate">&times;</button>
             </div>
             <div class="modal-body custom-scrollbar">
-                
-                <h3 class="input-group-label">1. Room Details</h3>
-                <p class="modal-label">Choose Room Icon</p>
+                <p class="modal-label">Room Icon</p>
                 <div class="avatar-grid small-grid" id="createRoomAvatarGrid"></div>
 
-                <label class="modal-label">New Room Name</label>
-                <input type="text" class="modal-input" id="createRoom" placeholder="Unique Room Name" maxlength="20">
+                <label class="modal-label">Room Name</label>
+                <input type="text" class="modal-input" id="newRoomName" placeholder="e.g. The Hangout" maxlength="20">
                 
-                <label class="modal-label">Set Private Key</label>
-                <input type="password" class="modal-input" id="createKey" placeholder="Room Password">
+                <label class="modal-label">Room Password</label>
+                <input type="password" class="modal-input" id="newRoomKey" placeholder="Required for others to join">
 
-                <div class="divider"></div>
-
-                <h3 class="input-group-label">2. Admin Details</h3>
-                <p class="modal-label">Choose Your Avatar</p>
-                <div class="avatar-grid small-grid" id="createUserAvatarGrid"></div>
-
-                <label class="modal-label">User Name (Admin)</label>
-                <input type="text" class="modal-input" id="createUser" placeholder="Your name" maxlength="20">
-                
-                <div style="text-align: center; margin-top:20px;">
-                    <button class="modal-btn" id="btnSignUp">Create Room</button>
-                </div>
+                <button class="modal-btn" id="btnConfirmCreate">Create & Join</button>
             </div>
         </div>
     </div>
