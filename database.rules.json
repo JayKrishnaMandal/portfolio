@@ -1,11 +1,32 @@
 {
   "rules": {
-    ".read": true,
-    ".write": true,
+    "users": {
+      "$uid": {
+        ".read": true,
+        ".write": "$uid === auth.uid || !data.exists() || !newData.exists()"
+      }
+    },
     "rooms": {
+      ".read": true,
       "$roomId": {
+        "meta": {
+          ".write": true
+        },
+        "messages": {
+          ".write": true,
+          "$msgId": {
+            ".validate": "newData.hasChildren(['user', 'uid', 'text', 'timestamp'])"
+          }
+        },
         "members": {
-           ".indexOn": ["name"]
+          ".write": true,
+          ".indexOn": ["name", "status"]
+        },
+        "typing": {
+          ".write": true
+        },
+        "banned": {
+          ".write": true
         }
       }
     }

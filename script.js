@@ -200,20 +200,27 @@ function saveSession(user, persistent) {
 
 // Leave current room and return to dashboard
 function leaveRoom() {
+    console.log('[LEAVE ROOM] Function called');
     if(currentUser && currentRoomId) {
         // Remove presence
         remove(ref(db, `rooms/${currentRoomId}/members/${currentUser.uid}`));
+        console.log('[LEAVE ROOM] Removed user from room members');
     }
     // Clear room state but keep user logged in
     currentRoomId = null;
     currentRoomName = null;
     currentRoomKey = null;
+    console.log('[LEAVE ROOM] Cleared room state, showing dashboard');
     showScreen('dashboard');
     renderDashboard();
 }
 
+// Make leaveRoom globally accessible
+window.leaveRoom = leaveRoom;
+
 // Full logout - clears user session
 function logout() {
+    console.log('[LOGOUT] Function called');
     if(currentUser && currentRoomId) {
         // Remove presence
         remove(ref(db, `rooms/${currentRoomId}/members/${currentUser.uid}`));
@@ -221,8 +228,12 @@ function logout() {
     currentUser = null;
     localStorage.removeItem('jkchat_user');
     sessionStorage.removeItem('jkchat_user');
+    console.log('[LOGOUT] Session cleared, reloading');
     location.reload();
 }
+
+// Make logout globally accessible
+window.logout = logout;
 
 // --- DASHBOARD LOGIC ---
 function renderDashboard() {
@@ -477,6 +488,9 @@ async function deleteRoom() {
         setLoading(false);
     }
 }
+
+// Make deleteRoom globally accessible
+window.deleteRoom = deleteRoom;
 
 
 // --- ROOM LOGIC ---
