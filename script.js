@@ -341,23 +341,26 @@ async function openRoomSettings() {
         document.getElementById('editRoomName').value = meta.name;
         document.getElementById('editRoomKey').value = meta.privateKey;
         
-        // Attach delete room event listener here (when modal is opened)
+        // Handle delete room button
         const deleteRoomBtn = document.getElementById('btnDeleteRoom');
         if(deleteRoomBtn) {
-            // Remove any existing event listeners by cloning the node
-            const newDeleteBtn = deleteRoomBtn.cloneNode(true);
-            deleteRoomBtn.parentNode.replaceChild(newDeleteBtn, deleteRoomBtn);
-            
-            // Attach new event listener
-            newDeleteBtn.onclick = deleteRoom;
-            console.log('[DELETE ROOM] Delete room button event listener attached');
+            console.log('[DELETE ROOM] Found delete button in modal');
             
             // Show/hide delete button based on admin status
             if(currentUser.uid === currentRoomAdminUid) {
-                newDeleteBtn.style.display = 'block';
+                deleteRoomBtn.style.display = 'block';
                 console.log('[DELETE ROOM] User is admin, showing delete button');
+                
+                // Attach event listener directly
+                deleteRoomBtn.onclick = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('[DELETE ROOM] Button clicked from modal');
+                    deleteRoom();
+                };
+                console.log('[DELETE ROOM] Click handler attached');
             } else {
-                newDeleteBtn.style.display = 'none';
+                deleteRoomBtn.style.display = 'none';
                 console.log('[DELETE ROOM] User is not admin, hiding delete button');
             }
         } else {
@@ -623,12 +626,11 @@ function setupRoomListeners(roomId) {
     console.log('[SETUP] Attaching leaveRoom to btnLogout');
     const leaveButton = document.getElementById('btnLogout');
     if (leaveButton) {
-        // Clone button to remove all existing listeners
-        const newLeaveButton = leaveButton.cloneNode(true);
-        leaveButton.parentNode.replaceChild(newLeaveButton, leaveButton);
-        
-        newLeaveButton.onclick = () => {
-            console.log('[LEAVE ROOM] Button clicked from setupRoomListeners');
+        // Simply set the onclick directly - it will override any existing handlers
+        leaveButton.onclick = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('[LEAVE ROOM] Button clicked!');
             leaveRoom();
         };
         console.log('[SETUP] leaveRoom attached successfully');
