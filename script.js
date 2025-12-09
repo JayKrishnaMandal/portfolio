@@ -236,27 +236,44 @@ function logout() {
 window.logout = logout;
 
 // --- DASHBOARD LOGIC ---
+let renderedRoomIds = new Set(); // Track rendered rooms to prevent duplicates
+
 function renderDashboard() {
     if (!currentUser) return;
     
+    console.log('[DASHBOARD] Rendering dashboard');
     el.dashUserAvatar.src = currentUser.avatar;
     el.dashUserName.textContent = currentUser.username;
+    
+    // Clear everything and reset tracking
     el.roomsList.innerHTML = '';
+    renderedRoomIds.clear();
 
     const rooms = currentUser.joinedRooms || {};
     const roomIds = Object.keys(rooms);
+    
+    console.log('[DASHBOARD] Found', roomIds.length, 'rooms');
 
     if (roomIds.length === 0) {
         el.roomsList.innerHTML = `<div class="empty-state"><i class="fa-regular fa-comments"></i><p>No rooms found. Create or Join one!</p></div>`;
+        return;
     }
 
     roomIds.forEach(async (rid) => {
+        // Prevent duplicate rendering
+        if (renderedRoomIds.has(rid)) {
+            console.log('[DASHBOARD] Skipping duplicate room:', rid);
+            return;
+        }
+        renderedRoomIds.add(rid);
+        
         // Fetch generic room details
         const rSnap = await get(ref(db, `rooms/${rid}/meta`));
         if (rSnap.exists()) {
             const meta = rSnap.val();
             const card = document.createElement('div');
             card.className = 'room-card';
+            card.dataset.roomId = rid; // Add data attribute for tracking
             card.innerHTML = `
                 <img src="${meta.icon}" class="room-card-icon">
                 <div class="room-card-info">
@@ -267,8 +284,14 @@ function renderDashboard() {
             card.onclick = () => enterRoom(rid, meta);
             el.roomsList.appendChild(card);
         } else {
-            // Room deleted?
-            // Optional: Cleanup user's joinedRooms?
+            // Room deleted - remove from user's joinedRooms
+            console.log('[DASHBOARD] Room not found, cleaning up:', rid);
+            if (currentUser.joinedRooms && currentUser.joinedRooms[rid]) {
+                delete currentUser.joinedRooms[rid];
+                await update(ref(db, `users/${currentUser.uid}/joinedRooms`), {
+                    [rid]: null
+                });
+            }
         }
     });
 }
@@ -871,7 +894,11 @@ function toggleDarkMode(forceState) {
     localStorage.setItem('theme', isDark ? 'dark' : 'light');
     const btnIcon = document.querySelector('#btnDarkMode i');
     if (btnIcon) btnIcon.className = isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+    console.log('[DARK MODE] Toggled to:', isDark ? 'dark' : 'light');
 }
+
+// Make toggleDarkMode globally accessible
+window.toggleDarkMode = toggleDarkMode;
 
 function setupEventListeners() {
     // Auth Tabs
