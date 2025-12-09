@@ -334,6 +334,11 @@ async function saveUserProfile() {
 async function openRoomSettings() {
     if(!currentRoomId) return;
     
+    console.log('[OPEN ROOM SETTINGS] Opening room settings modal');
+    console.log('[OPEN ROOM SETTINGS] currentRoomId:', currentRoomId);
+    console.log('[OPEN ROOM SETTINGS] currentUser.uid:', currentUser?.uid);
+    console.log('[OPEN ROOM SETTINGS] currentRoomAdminUid:', currentRoomAdminUid);
+    
     // Fetch fresh meta
     const snap = await get(ref(db, `rooms/${currentRoomId}/meta`));
     if(snap.exists()) {
@@ -351,16 +356,23 @@ async function openRoomSettings() {
                 deleteRoomBtn.style.display = 'block';
                 console.log('[DELETE ROOM] User is admin, showing delete button');
                 
-                // Attach event listener directly
+                // Set global handler for inline onclick
+                window.deleteRoomHandler = function() {
+                    console.log('[DELETE ROOM] Handler called via window.deleteRoomHandler');
+                    deleteRoom();
+                };
+                
+                // Also attach event listener directly as backup
                 deleteRoomBtn.onclick = function(e) {
                     e.preventDefault();
                     e.stopPropagation();
-                    console.log('[DELETE ROOM] Button clicked from modal');
+                    console.log('[DELETE ROOM] Button clicked via onclick');
                     deleteRoom();
                 };
-                console.log('[DELETE ROOM] Click handler attached');
+                console.log('[DELETE ROOM] Click handlers attached');
             } else {
                 deleteRoomBtn.style.display = 'none';
+                window.deleteRoomHandler = null;
                 console.log('[DELETE ROOM] User is not admin, hiding delete button');
             }
         } else {
@@ -369,6 +381,7 @@ async function openRoomSettings() {
         
         el.roomSettingsModal.classList.add('flex');
         el.roomSettingsModal.classList.remove('hidden');
+        console.log('[OPEN ROOM SETTINGS] Modal opened');
     }
 }
 
